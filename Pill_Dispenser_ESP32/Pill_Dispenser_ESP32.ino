@@ -6,8 +6,8 @@
 // ============================================
 // CONFIGURATION - CHANGE THESE VALUES
 // ============================================
-const char* ssid = "Broomys iPhone";
-const char* password = "kaibroomfieldwifi";
+const char* ssid = "SSID";
+const char* password = "PASSWORD";
 
 // Pin definitions for 28BYJ-48 stepper motor
 #define STEPPER_PIN1 19
