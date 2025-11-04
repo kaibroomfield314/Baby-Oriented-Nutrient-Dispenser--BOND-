@@ -23,7 +23,7 @@
 │ • Responses    │ │ • Debouncing │ │ • Movement  │ │ • Timeouts     │
 │ • Connection   │ │ • Messages   │ │ • Dispensing│ │ • Angles       │
 └────────────────┘ └──────────────┘ │ • Statistics│ │ • Attempts     │
-                                     └──────┬──────┘ └────────────────┘
+                                    └──────┬──────┘ └────────────────┘
                                             │
                         ┌───────────────────┴───────────────────┐
                         │                                       │
@@ -292,8 +292,8 @@ Return success/failure
 │  └─────────────┘        └──────────────┘               │
 └─────────────────────────────────────────────────────────┘
                           ↓
-┌─────────────────────────────────────────────────────────┐
-│                  Hardware Abstraction Layer              │
+┌────────────────────────────────────────────────────────┐
+│           Hardware Abstraction Layer                   │
 │  ┌─────────────┐        ┌──────────────┐               │
 │  │ Hardware    │        │ Sensor       │               │
 │  │ Controller  │        │ Manager      │               │
@@ -301,16 +301,16 @@ Return success/failure
 │  │ • Servo     │        │ • IR Sensor  │               │
 │  │ • Magnet    │        │ • Encoder    │               │
 │  └─────────────┘        └──────────────┘               │
-└─────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────┘
                           ↓
-┌─────────────────────────────────────────────────────────┐
-│                   Configuration Layer                    │
+┌────────────────────────────────────────────────────────┐
+│                   Configuration Layer                  │
 │  ┌─────────────┐        ┌──────────────┐               │
 │  │ Config.h    │        │Configuration │               │
 │  │ • Pins      │        │Settings.h    │               │
 │  │ • Constants │        │ • Parameters │               │
 │  └─────────────┘        └──────────────┘               │
-└─────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -319,16 +319,16 @@ Return success/failure
 
 ### **Coupling Matrix** (Lower is Better)
 
-|                    | Config | Settings | Sensor | Hardware | Dispenser | BLE | UI | Main |
-|--------------------|--------|----------|--------|----------|-----------|-----|-------|------|
-| Config             | -      | ✅       | ✅     | ✅       | ✅        | ✅  | ✅    | ✅   |
-| Settings           | ✅     | -        | ✅     | ✅       | ✅        | ✅  | ✅    | ✅   |
-| SensorManager      | ✅     | ✅       | -      | ❌       | ❌        | ❌  | ❌    | ❌   |
-| HardwareController | ✅     | ✅       | ❌     | -        | ❌        | ❌  | ❌    | ❌   |
-| DispenserController| ✅     | ✅       | ✅     | ✅       | -         | ❌  | ❌    | ❌   |
-| BLEManager         | ✅     | ✅       | ❌     | ❌       | ❌        | -   | ❌    | ❌   |
-| UIManager          | ✅     | ✅       | ❌     | ❌       | ❌        | ❌  | -     | ❌   |
-| Main Sketch        | ✅     | ✅       | ✅     | ✅       | ✅        | ✅  | ✅    | -    |
+|                    | Config | Settings | Sensor | Hardware  | Dispenser | BLE  |  UI  | Main |
+|--------------------|--------|----------|--------|-----------|-----------|------|-------|------|
+| Config             | -      | ✅       | ✅     | ✅       | ✅       | ✅  | ✅    | ✅   |
+| Settings           | ✅     | -        | ✅     | ✅       | ✅       | ✅  | ✅    | ✅   |
+| SensorManager      | ✅     | ✅       | -      | ❌       | ❌       | ❌  | ❌    | ❌   |
+| HardwareController | ✅     | ✅       | ❌     | -        | ❌       | ❌  | ❌    | ❌   |
+| DispenserController| ✅     | ✅       | ✅     | ✅       | -        | ❌  | ❌    | ❌   |
+| BLEManager         | ✅     | ✅       | ❌     | ❌       | ❌       | -   | ❌    | ❌   |
+| UIManager          | ✅     | ✅       | ❌     | ❌       | ❌       | ❌  | -     | ❌   |
+| Main Sketch        | ✅     | ✅       | ✅     | ✅       | ✅       | ✅  | ✅    | -    |
 
 ✅ = Depends on | ❌ = Independent
 

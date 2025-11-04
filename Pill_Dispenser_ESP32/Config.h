@@ -9,11 +9,11 @@
 #define BLE_DEVICE_NAME         "PillDispenser"
 
 // ============================================================================
-// Motor Control Pin Definitions
+// Stepper Motor Control Pin Definitions
 // ============================================================================
-#define PIN_FOR_MOTOR_SPEED_CONTROL_PWM     16    // ENA - PWM for motor speed
-#define PIN_FOR_MOTOR_DIRECTION_INPUT_1     17    // IN1 - Motor direction control 1
-#define PIN_FOR_MOTOR_DIRECTION_INPUT_2     18    // IN2 - Motor direction control 2
+#define PIN_FOR_STEPPER_DIR                 16    // D16 - Stepper direction (HIGH=forward, LOW=backward)
+#define PIN_FOR_STEPPER_STEP                17    // D17 - Stepper step pulse (HIGH→LOW transition triggers step)
+#define PIN_FOR_STEPPER_EN                  18    // D18 - Stepper enable (LOW=enabled, HIGH=disabled)
 
 // ============================================================================
 // Encoder Pin Definitions (for position tracking)

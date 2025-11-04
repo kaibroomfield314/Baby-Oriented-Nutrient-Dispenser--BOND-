@@ -29,6 +29,10 @@ private:
     bool isSystemHomedAndReady;                // True after successful homing
     int dispensedCountForEachCompartment[5];   // Max 5 compartments, adjust if needed
     
+    // Position tracking in steps (absolute position from home)
+    long currentPositionSteps;                 // Current absolute position in steps (0 = home position)
+    long compartmentStepPositions[5];          // Absolute step positions for each compartment (calculated from degrees)
+    
     /**
      * POSITIONING SYSTEM EXPLANATION:
      * 
@@ -77,11 +81,15 @@ public:
         sensorManager = sensors;
         currentCompartmentNumber = 0;
         isSystemHomedAndReady = false;
+        currentPositionSteps = 0;  // Start at unknown position until homed
         
         // Initialize dispense counters
         for (int i = 0; i < systemConfiguration->numberOfCompartmentsInDispenser; i++) {
             dispensedCountForEachCompartment[i] = 0;
         }
+        
+        // Calculate compartment step positions from degrees
+        calculateCompartmentStepPositions();
     }
     
     /**
@@ -89,6 +97,93 @@ public:
      */
     void initializeDispenserSystem() {
         Serial.println("Dispenser controller initialized");
+    }
+    
+    /**
+     * Calculate compartment step positions from degree positions
+     * Converts containerPositionsInDegrees[] to absolute step positions
+     */
+    void calculateCompartmentStepPositions() {
+        Serial.println("========================================");
+        Serial.println("[Position Tracking] Calculating compartment step positions");
+        Serial.println("========================================");
+        
+        // Calculate total steps per revolution
+        float totalStepsPerRevolution = systemConfiguration->stepperStepsPerRevolution * 
+                                        systemConfiguration->stepperMicrostepping * 
+                                        systemConfiguration->stepperGearRatio;
+        
+        Serial.print("Total steps per revolution: ");
+        Serial.println(totalStepsPerRevolution);
+        
+        // Convert each compartment position from degrees to steps
+        for (int i = 0; i < systemConfiguration->numberOfCompartmentsInDispenser; i++) {
+            float angleInDegrees = systemConfiguration->containerPositionsInDegrees[i];
+            compartmentStepPositions[i] = (long)((angleInDegrees / 360.0) * totalStepsPerRevolution);
+            
+            Serial.print("Compartment ");
+            Serial.print(i + 1);
+            Serial.print(": ");
+            Serial.print(angleInDegrees);
+            Serial.print("° = ");
+            Serial.print(compartmentStepPositions[i]);
+            Serial.println(" steps from home");
+        }
+        
+        Serial.println("========================================");
+    }
+    
+    /**
+     * Get current absolute position in steps
+     * @return Current position in steps from home (0 = home position)
+     */
+    long getCurrentPositionSteps() {
+        return currentPositionSteps;
+    }
+    
+    /**
+     * Get current position in degrees
+     * @return Current position in degrees from home (0° = home position)
+     */
+    float getCurrentPositionDegrees() {
+        float totalStepsPerRevolution = systemConfiguration->stepperStepsPerRevolution * 
+                                        systemConfiguration->stepperMicrostepping * 
+                                        systemConfiguration->stepperGearRatio;
+        return (currentPositionSteps / totalStepsPerRevolution) * 360.0;
+    }
+    
+    /**
+     * Reset position tracking to home (0 steps)
+     * Called when homing switch is activated
+     */
+    void resetPositionToHome() {
+        Serial.println("[Position Tracking] Resetting position to HOME (0 steps)");
+        currentPositionSteps = 0;
+        currentCompartmentNumber = 0;
+    }
+    
+    /**
+     * Update position tracking after movement
+     * @param stepsMoved Number of steps moved (positive = forward, negative = backward)
+     */
+    void updatePositionAfterMovement(long stepsMoved) {
+        currentPositionSteps += stepsMoved;
+        
+        // Handle wraparound (keep position within one revolution for display)
+        float totalStepsPerRevolution = systemConfiguration->stepperStepsPerRevolution * 
+                                        systemConfiguration->stepperMicrostepping * 
+                                        systemConfiguration->stepperGearRatio;
+        
+        // Keep position in reasonable range (but allow it to go beyond for tracking)
+        // Position can be negative or > 360° for absolute tracking
+        
+        Serial.print("[Position Tracking] Position updated: ");
+        Serial.print(stepsMoved);
+        Serial.print(" steps, new position: ");
+        Serial.print(currentPositionSteps);
+        Serial.print(" steps (");
+        Serial.print(getCurrentPositionDegrees());
+        Serial.println("°)");
     }
     
     // ========================================================================
@@ -108,8 +203,8 @@ public:
         Serial.println("========================================");
         
         int maxAttempts = systemConfiguration->homingRetryAttempts;
-        int baseSpeed = systemConfiguration->motorHomingSpeedPWM;
-        int speedIncrement = systemConfiguration->homingSpeedIncrementPerRetry;
+        int baseDelay = systemConfiguration->stepperHomingStepDelayMicroseconds;
+        int delayDecrement = systemConfiguration->homingDelayDecrementPerRetry;  // Decrease delay = increase speed
         int baseTimeout = MAXIMUM_HOMING_TIMEOUT_MILLISECONDS;
         int timeoutIncrement = systemConfiguration->homingTimeoutIncrementPerRetry;
         
@@ -121,26 +216,28 @@ public:
             Serial.println(maxAttempts);
             Serial.println("----------------------------------------");
             
-            // Calculate speed for this attempt (escalating)
-            int attemptSpeed = baseSpeed + ((attempt - 1) * speedIncrement);
-            attemptSpeed = constrain(attemptSpeed, 0, 255);  // Keep within valid PWM range
+            // Calculate step delay for this attempt (decreasing delay = faster speed for retries)
+            int attemptDelay = baseDelay - ((attempt - 1) * delayDecrement);
+            // Ensure delay doesn't go below minimum safe value
+            int minDelay = systemConfiguration->stepperMinStepDelayMicroseconds;
+            attemptDelay = constrain(attemptDelay, minDelay, baseDelay);
             
             // Calculate timeout for this attempt (increasing with each retry)
             unsigned long attemptTimeout = baseTimeout + ((attempt - 1) * timeoutIncrement);
             
             Serial.print("[Attempt ");
             Serial.print(attempt);
-            Serial.print("] Motor speed: ");
-            Serial.print(attemptSpeed);
-            Serial.print(" PWM | Timeout: ");
+            Serial.print("] Step delay: ");
+            Serial.print(attemptDelay);
+            Serial.print(" μs | Timeout: ");
             Serial.print(attemptTimeout);
-            Serial.println("ms");
+            Serial.println(" ms");
             
 			// Pre-check: Are we already at home? (only if system was previously homed)
 			if (isSystemHomedAndReady && sensorManager->isHomePositionSwitchActivated()) {
 				Serial.println("[Homing] Already at home switch - defining START here");
 				sensorManager->resetEncoderPositionToZero();
-				currentCompartmentNumber = 0; // At START (home)
+				resetPositionToHome();  // Reset position tracking to 0 steps
 				Serial.println("========================================");
 				Serial.println("Homing completed successfully!");
 				Serial.println("========================================");
@@ -150,24 +247,90 @@ public:
             // If switch is pressed at startup, move off it first
             if (sensorManager->isHomePositionSwitchActivated()) {
                 Serial.println("[Homing] Switch is pressed at startup - moving off home position first...");
-                hardwareController->setMotorToRotateBackwardAtSpeed(attemptSpeed);
-                delay(500);  // Move backward for 500ms to get off the switch
-                hardwareController->stopMotorCompletely();
+                // Move backward (anticlockwise) by a small angle to get off the switch
+                // Since we home forward (clockwise), we need to move backward first
+                long stepsMoved = hardwareController->moveStepperBackwardBySteps(
+                    hardwareController->calculateStepsForAngle(10.0), 
+                    attemptDelay
+                );
+                updatePositionAfterMovement(stepsMoved);  // Track the movement
                 delay(200);
-                Serial.println("[Homing] Moved off home position, now starting forward homing sequence...");
+                Serial.println("[Homing] Moved off home position, now starting forward (clockwise) homing sequence...");
             }
             
-            // Start motor at calculated speed
-            hardwareController->runMotorAtCustomHomingSpeed(attemptSpeed);
-            Serial.print("[Attempt ");
+            // Start continuous forward rotation for homing (clockwise to reach switch)
+            // Enable stepper and set direction once before the loop
+            Serial.println("========================================");
+            Serial.print("[Homing DEBUG] Attempt ");
             Serial.print(attempt);
-            Serial.println("] Motor activated - checking for movement...");
+            Serial.println(" - Starting continuous forward rotation");
+            Serial.println("========================================");
+            Serial.print("[Homing DEBUG] Step delay: ");
+            Serial.print(attemptDelay);
+            Serial.print(" μs, Timeout: ");
+            Serial.print(attemptTimeout);
+            Serial.println(" ms");
             
-            // Small delay to allow motor to start
-            delay(50);
+            // Enable stepper motor in forward direction (clockwise)
+            hardwareController->enableStepperMotor(true);  // true = forward/clockwise
             
-            // Wait for home switch activation with timeout
-            bool homeSwitchActivated = sensorManager->waitForHomeSwitchActivationWithTimeout(attemptTimeout);
+            // Check initial switch state
+            bool initialSwitchState = sensorManager->isHomePositionSwitchActivated();
+            Serial.print("[Homing DEBUG] Initial home switch state: ");
+            Serial.println(initialSwitchState ? "ACTIVATED (LOW)" : "NOT ACTIVATED (HIGH)");
+            
+            // Continuous rotation loop: step motor while waiting for switch activation
+            unsigned long startTimeMillis = millis();
+            bool homeSwitchActivated = false;
+            unsigned long lastLogTime = 0;
+            unsigned long stepCount = 0;
+            
+            Serial.println("[Homing DEBUG] Entering continuous stepping loop...");
+            
+            while (!sensorManager->isHomePositionSwitchActivated()) {
+                // Check for timeout
+                unsigned long elapsed = millis() - startTimeMillis;
+                if (elapsed > attemptTimeout) {
+                    Serial.print("[Homing DEBUG] TIMEOUT after ");
+                    Serial.print(elapsed);
+                    Serial.print(" ms (");
+                    Serial.print(stepCount);
+                    Serial.println(" steps generated)");
+                    Serial.println("[Homing] TIMEOUT after ");
+                    Serial.print(elapsed);
+                    Serial.println("ms - home switch never activated");
+                    break;
+                }
+                
+                // Generate one step at the specified delay (motor already enabled and direction set)
+                hardwareController->rotateStepperForwardContinuous(attemptDelay);
+                stepCount++;
+                
+                // Log progress every 500ms
+                if (elapsed - lastLogTime >= 500) {
+                    Serial.print("[Homing DEBUG] Stepping... elapsed: ");
+                    Serial.print(elapsed);
+                    Serial.print(" ms, steps: ");
+                    Serial.print(stepCount);
+                    Serial.print(", switch: ");
+                    Serial.println(sensorManager->isHomePositionSwitchActivated() ? "ACTIVATED" : "NOT ACTIVATED");
+                    lastLogTime = elapsed;
+                }
+            }
+            
+            Serial.print("[Homing DEBUG] Loop exited. Total steps: ");
+            Serial.println(stepCount);
+            
+            // Check if switch was activated (not timeout)
+            if (sensorManager->isHomePositionSwitchActivated()) {
+                unsigned long finalElapsed = millis() - startTimeMillis;
+                Serial.println("========================================");
+                Serial.print("[Homing] *** SUCCESS! *** Switch activated after ");
+                Serial.print(finalElapsed);
+                Serial.println("ms");
+                Serial.println("========================================");
+                homeSwitchActivated = true;
+            }
             
             // Stop motor
             Serial.print("[Attempt ");
@@ -191,7 +354,7 @@ public:
                 
 				// Define START at the switch position (no additional offset)
 				sensorManager->resetEncoderPositionToZero();
-				currentCompartmentNumber = 0; // At START (home)
+				resetPositionToHome();  // Reset position tracking to 0 steps (HOME)
 				isSystemHomedAndReady = true;
                 
                 Serial.println("========================================");
@@ -215,11 +378,13 @@ public:
                 Serial.println("...");
                 delay(500);
                 
-                // Try a small backward pulse to "reset" if stuck
-                Serial.println("[Retry prep] Attempting small backward pulse to clear obstruction...");
-                hardwareController->setMotorToRotateBackwardAtSpeed(attemptSpeed);
-                delay(100);
-                hardwareController->stopMotorCompletely();
+                // Try a small forward pulse to "reset" if stuck
+                Serial.println("[Retry prep] Attempting small forward pulse to clear obstruction...");
+                long stepsMoved = hardwareController->moveStepperForwardBySteps(
+                    hardwareController->calculateStepsForAngle(5.0), 
+                    attemptDelay
+                );
+                updatePositionAfterMovement(stepsMoved);  // Track the movement
                 delay(200);
             }
         }
@@ -250,6 +415,169 @@ public:
         if (!isSystemHomedAndReady) {
             performHomingWithRetryAndEscalation();
         }
+    }
+    
+    /**
+     * Calibration function: Measure full rotation time using homing switch
+     * This function:
+     * 1. Homes to switch (activates switch)
+     * 2. Starts timer
+     * 3. Rotates forward 360° (one full rotation)
+     * 4. Waits for switch activation again (back at home)
+     * 5. Calculates timing data and logs results
+     * 
+     * @return true if calibration successful, false if timeout or error
+     */
+    bool calibrateFullRotationTiming() {
+        Serial.println("========================================");
+        Serial.println("CALIBRATION: Full Rotation Timing");
+        Serial.println("========================================");
+        Serial.println("This will measure the time for one complete 360° rotation");
+        Serial.println("using the homing switch as a reference point.");
+        Serial.println("");
+        
+        // Step 1: Ensure we're at home position
+        Serial.println("[Calibration] Step 1: Homing to switch...");
+        if (!performHomingWithRetryAndEscalation()) {
+            Serial.println("[Calibration] ERROR: Failed to home before calibration");
+            return false;
+        }
+        
+        // Verify switch is activated
+        if (!sensorManager->isHomePositionSwitchActivated()) {
+            Serial.println("[Calibration] ERROR: Switch not activated after homing");
+            return false;
+        }
+        
+        Serial.println("[Calibration] Successfully homed - switch is activated");
+        delay(500);  // Settle time
+        
+        // Step 2: Move off switch (backward) so we can detect it again
+        Serial.println("[Calibration] Step 2: Moving backward off switch...");
+        int stepDelay = systemConfiguration->stepperHomingStepDelayMicroseconds;
+        long stepsToMoveOff = hardwareController->calculateStepsForAngle(10.0);
+        long stepsMoved = hardwareController->moveStepperBackwardBySteps(stepsToMoveOff, stepDelay);
+        updatePositionAfterMovement(stepsMoved);
+        
+        // Wait a bit and verify switch is not activated
+        delay(200);
+        if (sensorManager->isHomePositionSwitchActivated()) {
+            Serial.println("[Calibration] WARNING: Switch still activated after moving off");
+        }
+        
+        Serial.println("[Calibration] Moved off switch, ready for rotation");
+        delay(500);
+        
+        // Step 3: Start timer and rotate forward 360°
+        Serial.println("[Calibration] Step 3: Starting full rotation (360°)...");
+        Serial.println("[Calibration] Timer started - rotating forward...");
+        
+        unsigned long rotationStartTime = millis();
+        unsigned long stepCount = 0;
+        
+        // Calculate steps for 360° rotation
+        float totalStepsPerRevolution = systemConfiguration->stepperStepsPerRevolution * 
+                                        systemConfiguration->stepperMicrostepping * 
+                                        systemConfiguration->stepperGearRatio;
+        long stepsForFullRotation = (long)totalStepsPerRevolution;
+        
+        Serial.print("[Calibration] Rotating ");
+        Serial.print(stepsForFullRotation);
+        Serial.print(" steps (360°) at ");
+        Serial.print(stepDelay);
+        Serial.println(" μs delay");
+        
+        // Enable motor for forward rotation
+        hardwareController->enableStepperMotor(true);  // Forward
+        
+        // Rotate forward until switch is activated again
+        bool switchActivated = false;
+        unsigned long lastLogTime = 0;
+        
+        while (!sensorManager->isHomePositionSwitchActivated()) {
+            // Generate step
+            hardwareController->rotateStepperForwardContinuous(stepDelay);
+            stepCount++;
+            
+            // Check for timeout (should complete in reasonable time)
+            unsigned long elapsed = millis() - rotationStartTime;
+            if (elapsed > 30000) {  // 30 second timeout
+                Serial.println("[Calibration] ERROR: Timeout - full rotation took too long");
+                hardwareController->stopMotorCompletely();
+                return false;
+            }
+            
+            // Log progress every second
+            if (elapsed - lastLogTime >= 1000) {
+                Serial.print("[Calibration] Rotating... elapsed: ");
+                Serial.print(elapsed);
+                Serial.print(" ms, steps: ");
+                Serial.print(stepCount);
+                Serial.print(", switch: ");
+                Serial.println(sensorManager->isHomePositionSwitchActivated() ? "ACTIVATED" : "NOT ACTIVATED");
+                lastLogTime = elapsed;
+            }
+        }
+        
+        // Step 4: Switch activated - stop timer
+        unsigned long rotationEndTime = millis();
+        unsigned long fullRotationTimeMs = rotationEndTime - rotationStartTime;
+        
+        hardwareController->stopMotorCompletely();
+        
+        // Step 5: Calculate timing data
+        float timePerDegree = fullRotationTimeMs / 360.0;
+        float stepsPerSecond = (stepCount * 1000.0) / fullRotationTimeMs;
+        
+        Serial.println("");
+        Serial.println("========================================");
+        Serial.println("CALIBRATION RESULTS");
+        Serial.println("========================================");
+        Serial.print("Full rotation time: ");
+        Serial.print(fullRotationTimeMs);
+        Serial.print(" ms (");
+        Serial.print(fullRotationTimeMs / 1000.0);
+        Serial.println(" seconds)");
+        Serial.print("Steps taken: ");
+        Serial.print(stepCount);
+        Serial.print(" steps (expected: ");
+        Serial.print(stepsForFullRotation);
+        Serial.println(" steps)");
+        Serial.print("Time per degree: ");
+        Serial.print(timePerDegree);
+        Serial.println(" ms/degree");
+        Serial.print("Steps per second: ");
+        Serial.print(stepsPerSecond);
+        Serial.println(" steps/sec");
+        Serial.print("Step delay used: ");
+        Serial.print(stepDelay);
+        Serial.println(" μs");
+        Serial.println("");
+        
+        // Calculate time to each compartment
+        Serial.println("Calculated time to each compartment:");
+        Serial.println("----------------------------------------");
+        for (int i = 0; i < systemConfiguration->numberOfCompartmentsInDispenser; i++) {
+            float compartmentAngle = systemConfiguration->containerPositionsInDegrees[i];
+            float timeToCompartment = compartmentAngle * timePerDegree;
+            
+            Serial.print("Compartment ");
+            Serial.print(i + 1);
+            Serial.print(" (");
+            Serial.print(compartmentAngle);
+            Serial.print("°): ");
+            Serial.print(timeToCompartment);
+            Serial.print(" ms (");
+            Serial.print(timeToCompartment / 1000.0);
+            Serial.println(" seconds)");
+        }
+        Serial.println("========================================");
+        
+        // Reset position to home after calibration
+        resetPositionToHome();
+        
+        Serial.println("[Calibration] Calibration complete - position reset to home");
+        return true;
     }
     
     // ========================================================================
@@ -286,80 +614,93 @@ public:
             return true;
         }
         
-        // POSITIONING CALCULATION:
-        // START position = 0° (defined by home switch during homing)
-        // Each container has a fixed position stored in containerPositionsInDegrees array
+        // EXACT STEP-BASED POSITIONING:
+        // Use absolute step positions to move to exact compartment location
         
-        // Get ABSOLUTE position of target container from array
-        // Array is 0-indexed, so Container 1 = index 0, Container 2 = index 1, etc.
-        float targetAbsoluteAngle = systemConfiguration->containerPositionsInDegrees[targetCompartmentNumber - 1];
+        // Get target absolute step position for the compartment
+        long targetStepPosition = compartmentStepPositions[targetCompartmentNumber - 1];
         
-        // Get ABSOLUTE position of current location
-        float currentAbsoluteAngle = (currentCompartmentNumber == 0) ? 0.0 : 
-                                     systemConfiguration->containerPositionsInDegrees[currentCompartmentNumber - 1];
+        // Get current absolute step position
+        long currentStepPosition = currentPositionSteps;
         
-        // Calculate RELATIVE movement needed (target - current)
-        float angleToTravel = targetAbsoluteAngle - currentAbsoluteAngle;
-        
-        // Handle wraparound (always go forward)
-        if (angleToTravel < 0) {
-            angleToTravel += 360.0;
-        }
-        
+        Serial.println("========================================");
+        Serial.println("[Positioning] EXACT STEP-BASED POSITIONING");
+        Serial.println("========================================");
         Serial.print("[Positioning] CURRENT: ");
+        Serial.print(currentStepPosition);
+        Serial.print(" steps (");
+        Serial.print(getCurrentPositionDegrees());
+        Serial.print("°)");
         if (currentCompartmentNumber == 0) {
-            Serial.print("START/HOME (0° absolute)");
+            Serial.print(" - HOME");
         } else {
-            Serial.print("Container ");
+            Serial.print(" - Compartment ");
             Serial.print(currentCompartmentNumber);
-            Serial.print(" (");
-            Serial.print(currentAbsoluteAngle);
-            Serial.print("° absolute = START + ");
-            Serial.print(currentAbsoluteAngle);
-            Serial.print("° offset)");
         }
         Serial.println();
         
-        Serial.print("[Positioning] TARGET: Container ");
-        Serial.print(targetCompartmentNumber);
+        Serial.print("[Positioning] TARGET: ");
+        Serial.print(targetStepPosition);
+        Serial.print(" steps (");
+        Serial.print(systemConfiguration->containerPositionsInDegrees[targetCompartmentNumber - 1]);
+        Serial.print("°) - Compartment ");
+        Serial.println(targetCompartmentNumber);
+        
+        // Calculate steps needed to move (target - current)
+        long stepsToMove = targetStepPosition - currentStepPosition;
+        
+        // Calculate total steps per revolution for wraparound handling
+        float totalStepsPerRevolution = systemConfiguration->stepperStepsPerRevolution * 
+                                        systemConfiguration->stepperMicrostepping * 
+                                        systemConfiguration->stepperGearRatio;
+        
+        // Handle wraparound - choose shortest path
+        // If movement is more than half a revolution, go the other way
+        if (abs(stepsToMove) > (totalStepsPerRevolution / 2)) {
+            if (stepsToMove > 0) {
+                stepsToMove -= (long)totalStepsPerRevolution;  // Go backward instead
+            } else {
+                stepsToMove += (long)totalStepsPerRevolution;  // Go forward instead
+            }
+        }
+        
+        Serial.print("[Positioning] MOVEMENT: ");
+        Serial.print(abs(stepsToMove));
+        Serial.print(" steps ");
+        Serial.print((stepsToMove > 0) ? "FORWARD" : "BACKWARD");
         Serial.print(" (");
-        Serial.print(targetAbsoluteAngle);
-        Serial.print("° absolute = START + ");
-        Serial.print(targetAbsoluteAngle);
-        Serial.println("° offset)");
+        Serial.print((abs(stepsToMove) / totalStepsPerRevolution) * 360.0);
+        Serial.println("°)");
         
-        Serial.print("[Positioning] MOVEMENT: Rotate ");
-        Serial.print(angleToTravel);
-        Serial.print("° forward from current position");
-        Serial.println();
+        // If already at target position (within tolerance), no movement needed
+        if (abs(stepsToMove) < 5) {  // 5 steps tolerance
+            Serial.println("[Positioning] Already at target position (within tolerance)");
+            currentCompartmentNumber = targetCompartmentNumber;
+            return true;
+        }
         
-        // Calculate movement time based on angle
-        // This is calibrated based on motor speed and mechanical system
-        // Formula: time = (angle / degrees_per_second)
-        // Default estimate: ~180 degrees per second (MUST be calibrated for your hardware!)
-        float estimatedDegreesPerSecond = systemConfiguration->estimatedMotorDegreesPerSecond;
-        unsigned long movementTimeMs = (unsigned long)((angleToTravel / estimatedDegreesPerSecond) * 1000.0);
+        // Get step delay for movement
+        int stepDelay = systemConfiguration->stepperRunningStepDelayMicroseconds;
+        Serial.print("[Positioning] Step delay: ");
+        Serial.print(stepDelay);
+        Serial.println(" μs");
         
-        // Apply minimum and maximum movement times for safety
-        movementTimeMs = constrain(movementTimeMs, 100, 5000);  // 100ms to 5s
+        Serial.println("[Positioning] Moving to exact step position...");
         
-        Serial.print("[Positioning] Estimated movement time: ");
-        Serial.print(movementTimeMs);
-        Serial.println("ms");
-        Serial.print("[Positioning] Motor speed: ");
-        Serial.print(systemConfiguration->motorRunningSpeedPWM);
-        Serial.println(" PWM");
+        // Move exact number of steps
+        long stepsMoved = 0;
+        if (stepsToMove > 0) {
+            // Move forward
+            stepsMoved = hardwareController->moveStepperForwardBySteps(stepsToMove, stepDelay);
+        } else {
+            // Move backward
+            stepsMoved = hardwareController->moveStepperBackwardBySteps(abs(stepsToMove), stepDelay);
+        }
         
-        // Start motor at normal running speed
-        hardwareController->runMotorAtNormalSpeed();
-        Serial.println("[Positioning] Motor started - rotating forward...");
+        // Update position tracking
+        updatePositionAfterMovement(stepsMoved);
         
-        // Move for calculated time
-        delay(movementTimeMs);
-        
-        // Stop motor
-        hardwareController->stopMotorCompletely();
-        Serial.println("[Positioning] Motor stopped");
+        Serial.println("[Positioning] Motor movement complete");
         
         // Allow settling time for plate to stabilize
         Serial.print("[Positioning] Settling for ");
@@ -367,15 +708,17 @@ public:
         Serial.println("ms...");
         delay(systemConfiguration->delayAfterCompartmentMoveMilliseconds);
         
-        // UPDATE CURRENT POSITION - This is crucial!
-        // All future movements will calculate from THIS position, not from START
+        // UPDATE CURRENT POSITION
         currentCompartmentNumber = targetCompartmentNumber;
         
         Serial.print("POSITIONED: Now at Container ");
         Serial.print(currentCompartmentNumber);
         Serial.print(" (");
-        Serial.print(targetAbsoluteAngle);
+        Serial.print(currentPositionSteps);
+        Serial.print(" steps, ");
+        Serial.print(getCurrentPositionDegrees());
         Serial.println("°)");
+        Serial.println("========================================");
         
         return true;
     }

@@ -10,11 +10,42 @@
  */
 struct SystemConfiguration {
     // ========================================================================
-    // Motor Speed Settings (PWM values: 0-255 standard, ESP32 can use 0-255 or higher with custom resolution)
+    // Stepper Motor Settings
     // ========================================================================
-    int motorHomingSpeedPWM = 255;              // Speed during homing (needs higher torque to overcome static friction)
-    int motorRunningSpeedPWM = 255;             // Normal running speed for compartment moves
-    // If motor doesn't run or behaves erratically, reduce to 255 or lower.
+    // 
+    // HOW STEPPER MOTORS WORK:
+    // - Stepper motors move in discrete steps (not continuous like DC motors)
+    // - Speed = step pulse frequency (how fast pulses are sent)
+    // - Speed is controlled by delay between step pulses: speed = 1 / delay_between_steps
+    // - Lower delay = faster movement, higher delay = slower movement
+    // - Each step pulse moves motor by: 360° / (stepsPerRevolution * microstepping * gearRatio)
+    //
+    // STEPPER MOTOR SPEED CONTROL:
+    // - Stepper motors use step pulse frequency to control speed
+    // - Speed = 1 / (delay_between_steps_in_microseconds)
+    // - We use direct step delay values (in microseconds) - this is how stepper motors work
+    // - Lower delay = higher step frequency = faster movement
+    // - Higher delay = lower step frequency = slower movement
+    // - User calibrates these values based on motor/driver capabilities and mechanical load
+    //
+    
+    // Stepper motor mechanical configuration (CALIBRATE THESE!)
+    int stepperStepsPerRevolution = 200;        // Steps per full rotation (200 for 1.8° motor, 400 for 0.9°)
+    int stepperMicrostepping = 1;               // Microstepping setting on driver (1, 2, 4, 8, 16)
+    float stepperGearRatio = 1.0;               // Gear reduction ratio (1.0 if no gear reduction)
+    
+    // Step pulse timing - DIRECT DELAY VALUES (CALIBRATE THESE!)
+    // These are the delays BETWEEN step pulses in microseconds
+    // Lower delay = faster speed, higher delay = slower speed
+    int stepperHomingStepDelayMicroseconds = 4000;   // Delay between steps during homing (slower for accuracy)
+    int stepperRunningStepDelayMicroseconds = 4000;  // Delay between steps for normal movement (faster)
+    
+    // Safety limits for step delay (to prevent motor damage)
+    int stepperMinStepDelayMicroseconds = 500;        // Minimum safe delay (fastest speed) - adjust based on motor/driver limits
+    int stepperMaxStepDelayMicroseconds = 5000;     // Maximum delay (slowest speed) - for very slow movements
+    
+    // Calculate total steps per revolution with microstepping and gear ratio
+    // stepsPerRevolution = stepperStepsPerRevolution * stepperMicrostepping * stepperGearRatio
     
     // ========================================================================
     // Servo Positioning Settings (angles in degrees: 0-180)
@@ -55,24 +86,31 @@ struct SystemConfiguration {
 	// Container Positions (degrees from START position = switch position)
     // ARRAY-BASED: Each container can have custom position
     // Index 0 = Container 1, Index 1 = Container 2, etc.
+    // Evenly spaced: 360° / 5 compartments = 72° spacing
 	float containerPositionsInDegrees[5] = {
-		88.0,       // Container 1: absolute angle from START
-		276.0,      // Container 2: absolute angle from START
-		450.0,  	// Container 3: absolute angle from START
-		630.0,	    // Container 4: absolute angle from START
-		850.0  	// Container 5: absolute angle from START
+		0.0,        // Container 1: at home/START position (0°)
+		72.0,       // Container 2: 72° from START (evenly spaced)
+		144.0,      // Container 3: 144° from START (evenly spaced)
+		216.0,      // Container 4: 216° from START (evenly spaced)
+		288.0       // Container 5: 288° from START (evenly spaced)
 	};
+    // These positions are evenly spaced: 0°, 72°, 144°, 216°, 288°
     // To customize: Simply change the angle values above for any container
-    // Example: {0.0, 72.0, 144.0, 216.0, 288.0} for equal spacing
+    // Movement times (at 1253ms per 360° rotation):
+    // - Compartment 1: 0ms (at home)
+    // - Compartment 2: ~251ms (72°)
+    // - Compartment 3: ~501ms (144°)
+    // - Compartment 4: ~752ms (216°)
+    // - Compartment 5: ~1002ms (288°)
     
     // ========================================================================
     // Homing Sequence Settings
     // ========================================================================
     int delayAfterHomingSwitchActivationMilliseconds = 100;    // Settling time after hitting home
     int delayAfterHomingCompleteMilliseconds = 1000;           // Display delay before ready
-    int homingRetryAttempts = 1;                               // Number of homing attempts (200 PWM works reliably)
-    int homingSpeedIncrementPerRetry = 0;                      // No speed increment needed (already at 200 PWM)
-    int homingTimeoutIncrementPerRetry = 0;                    // No timeout increment needed
+    int homingRetryAttempts = 1;                               // Number of homing attempts
+    int homingDelayDecrementPerRetry = 0;                      // Decrease delay (increase speed) per retry (0 = same speed)
+    int homingTimeoutIncrementPerRetry = 0;                    // Increase timeout per retry (0 = same timeout)
     
     // ========================================================================
     // Dispensing Operation Delays
@@ -85,9 +123,7 @@ struct SystemConfiguration {
     // Movement Calculation Settings
     // ========================================================================
     float encoderPositionMultiplierForCompartment = 50.0;      // Encoder scaling factor (tune based on hardware)
-    int approximateMovementDelayMilliseconds = 500;            // Basic time-based movement (for systems without precise encoder control)
-    float estimatedMotorDegreesPerSecond = 180.0;             // Estimated rotation speed at normal PWM (calibrate based on testing)
-    // To calibrate: Time how long it takes to rotate 360° at motorRunningSpeedPWM, then: degrees_per_sec = 360 / time_in_seconds
+    // NOTE: Time-based movement removed - now using step-based positioning for precision
     
     // ========================================================================
     // UI Display Settings

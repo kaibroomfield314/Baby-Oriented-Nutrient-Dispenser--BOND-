@@ -70,9 +70,9 @@ D26     = Button 7 (Dispense)
 
 ### Actuators
 ```
-D16     = Motor speed (PWM)
-D17     = Motor direction IN1
-D18     = Motor direction IN2
+D16     = Stepper motor DIR (direction)
+D17     = Stepper motor STEP (step pulse)
+D18     = Stepper motor EN (enable, LOW=enabled)
 D4      = Servo signal
 D15     = Electromagnet control
 D2      = Status LED
@@ -95,16 +95,28 @@ D2      = Status LED
 ### 3. Basic Operation
 - **Select compartment**: Press Button 1-5
 - **Dispense pill**: Press Button 7
-- **Re-home**: Press Button 6 (if position drifts)
+- **Re-home**: Press Button 6 (short press)
+- **Calibration (full rotation timing)**: Press and hold Button 6 for 3+ seconds
 
 ## Critical Configuration
 
 Edit `ConfigurationSettings.h`:
 
 ```cpp
-// Motor speeds (use 200-255 range for most drivers)
-int motorHomingSpeedPWM = 255;
-int motorRunningSpeedPWM = 255;
+// ⚠️ MUST CALIBRATE: Stepper motor mechanical configuration
+int stepperStepsPerRevolution = 200;        // Steps per rotation (200 for 1.8°, 400 for 0.9°)
+int stepperMicrostepping = 1;               // Microstepping on driver (1, 2, 4, 8, 16)
+float stepperGearRatio = 1.0;               // Gear reduction (1.0 if none)
+
+// ⚠️ MUST CALIBRATE: Step pulse timing - DIRECT DELAY VALUES (in microseconds)
+// How stepper motors work: Speed = step pulse frequency (1 / delay_between_steps)
+// Lower delay = faster movement (higher frequency), higher delay = slower movement (lower frequency)
+int stepperHomingStepDelayMicroseconds = 1500;   // Delay between steps during homing (slower for accuracy)
+int stepperRunningStepDelayMicroseconds = 1000;   // Delay between steps for normal movement (faster)
+
+// Safety limits (to prevent motor damage)
+int stepperMinStepDelayMicroseconds = 50;        // Minimum safe delay (fastest speed)
+int stepperMaxStepDelayMicroseconds = 5000;      // Maximum delay (slowest speed)
 
 // Container positions (degrees from home/start position)
 // ARRAY-BASED: Customize any container position
@@ -117,9 +129,6 @@ float containerPositionsInDegrees[5] = {
 };
 // Example custom spacing: {0.0, 75.0, 150.0, 220.0, 290.0}
 
-// ⚠️ MUST CALIBRATE: Rotation speed for positioning accuracy
-float estimatedMotorDegreesPerSecond = 180.0;
-
 // Auto-homing after dispense
 bool autoHomeAfterDispense = true;  // Automatically home after successful pill dispense
 
@@ -131,16 +140,33 @@ int servoDispensingAngleInDegrees = 90;
 
 ## Calibration (REQUIRED!)
 
-### Motor Speed Calibration
+### Stepper Motor Configuration
 ```
-1. Home system (Button 6 or startup)
-2. Select Container 5 (Button 5)
-3. Time how long plate takes to reach Container 5
-   Expected: ~1.6 seconds at default 180°/s
-4. Calculate: actual_speed = 288° / time_in_seconds
-   Example: 288° / 2.0s = 144°/s
-5. Update estimatedMotorDegreesPerSecond in ConfigurationSettings.h
-6. Re-upload and test all compartments
+1. Set stepperStepsPerRevolution (typically 200 for 1.8° motor, 400 for 0.9°)
+2. Set stepperMicrostepping (check your driver settings: 1, 2, 4, 8, or 16)
+3. Set stepperGearRatio (1.0 if no gear reduction, otherwise your ratio)
+4. Calibrate step delay timing (step pulse frequency):
+   - Start with stepperHomingStepDelayMicroseconds = 1500μs (slower, safer - ~667 steps/sec)
+   - Start with stepperRunningStepDelayMicroseconds = 1000μs (faster for normal movement - ~1000 steps/sec)
+   - Test minimum delay: Start with 50μs, reduce until motor misses steps
+   - Set stepperMinStepDelayMicroseconds to safe minimum (prevents motor damage)
+   - Set stepperMaxStepDelayMicroseconds for slowest speed (5000μs default - ~200 steps/sec)
+   - Lower delay = faster speed (higher step frequency), higher delay = slower speed (lower step frequency)
+   - Typical range: 200-2000μs delay (500-5000 steps per second)
+5. Test positioning accuracy:
+   - Home system
+   - Move to each compartment and verify position
+   - Adjust containerPositionsInDegrees[] if needed
+   - Adjust step delays if movement is too fast/slow or motor misses steps
+
+6. Run full rotation timing calibration:
+   - Press and hold Button 6 for 3+ seconds to start calibration
+   - System will rotate 360° and measure actual timing
+   - Check Serial Monitor for results:
+     * Full rotation time (ms)
+     * Time per degree (ms/degree)
+     * Calculated time to each compartment
+   - Use these values to verify step-based positioning matches mechanical timing
 ```
 
 ### Fine-tuning
@@ -165,10 +191,11 @@ RESET          → Reset counters
 | Issue | Solution |
 |-------|----------|
 | Homing fails | Check D12 switch wired correctly (LOW when pressed) |
-| Wrong compartment reached | Calibrate `estimatedMotorDegreesPerSecond` or adjust positions in `containerPositionsInDegrees[]` array |
+| Wrong compartment reached | Calibrate stepper motor settings (steps per revolution, microstepping, gear ratio) or adjust positions in `containerPositionsInDegrees[]` array |
 | Position drifts | Press Button 6 to re-home periodically |
 | Pills not detected | Check D35 IR sensor, increase timeout |
-| Motor doesn't move | Check wiring D16/D17/D18, try PWM 200-255 |
+| Stepper doesn't move | Check wiring D16/D17/D18, verify EN pin (LOW=enabled), adjust step pulse delays |
+| Stepper misses steps | Increase stepperMinStepDelayMicroseconds (motor going too fast - step frequency too high) |
 | Servo doesn't move | Check D4 connection and angle settings |
 
 ## Operation Flow
@@ -220,7 +247,7 @@ System Ready (at home position)
 
 ---
 
-**Version**: 1.0  
+**Version**: 2.0  
 **Hardware**: ESP32 with 5-compartment rotating dispenser  
-**Motor Speed**: 255 PWM (calibrate `estimatedMotorDegreesPerSecond`)
+**Motor**: Stepper motor (calibrate steps per revolution, microstepping, gear ratio, and pulse timing)
 

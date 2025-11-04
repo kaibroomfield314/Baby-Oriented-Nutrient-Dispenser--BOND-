@@ -135,7 +135,7 @@ Already at home, no need to move
 [Positioning] TARGET: Container 5 (288° absolute = START + 288° offset)
 [Positioning] MOVEMENT: Rotate 288° forward from current position
 [Positioning] Estimated movement time: 1600ms
-[Positioning] Motor speed: 255 PWM
+[Positioning] Step delay: 1000 μs
 [Positioning] Motor started - rotating forward...
 [Positioning] Motor stopped
 [Positioning] Settling for 200ms...
@@ -151,7 +151,7 @@ POSITIONING: Moving to container 3
 [Positioning] TARGET: Container 3 (144° absolute = START + 144° offset)
 [Positioning] MOVEMENT: Rotate 216° forward from current position
 [Positioning] Estimated movement time: 1200ms
-[Positioning] Motor speed: 255 PWM
+[Positioning] Step delay: 1000 μs
 [Positioning] Motor started - rotating forward...
 [Positioning] Motor stopped
 [Positioning] Settling for 200ms...

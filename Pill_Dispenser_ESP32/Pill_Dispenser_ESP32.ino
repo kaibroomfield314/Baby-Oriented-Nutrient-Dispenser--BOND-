@@ -152,34 +152,65 @@ void setup() {
 
 void loop() {
     // ========================================================================
-    // Button 6 - Homing Trigger
+    // Button 6 - Homing Trigger / Calibration Trigger
     // ========================================================================
     
-    // Check if button 6 is pressed to trigger homing
+    // Check if button 6 is pressed to trigger homing or calibration
     static unsigned long lastHomingButtonTime = 0;
     static bool lastHomingButtonState = HIGH;
+    static unsigned long buttonPressStartTime = 0;
     bool currentHomingButtonState = digitalRead(PIN_FOR_NAVIGATION_BACK_BUTTON);
     
-    // Detect button press (transition from HIGH to LOW)
+    // Detect button press start (transition from HIGH to LOW)
     if (lastHomingButtonState == HIGH && currentHomingButtonState == LOW) {
+        buttonPressStartTime = millis();
+    }
+    
+    // Detect button release (transition from LOW to HIGH)
+    if (lastHomingButtonState == LOW && currentHomingButtonState == HIGH) {
+        unsigned long pressDuration = millis() - buttonPressStartTime;
+        
         // Check debounce (prevent multiple triggers)
         if (millis() - lastHomingButtonTime > systemConfig.homingButtonDebounceMilliseconds) {
             lastHomingButtonTime = millis();
             
-            Serial.println("========================================");
-            Serial.println("BUTTON 6 PRESSED - INITIATING HOMING");
-            Serial.println("========================================");
-            
-            uiManager->displayHomingInProgressMessage();
-            
-            bool homingSuccessful = dispenserController->performHomingWithRetryAndEscalation();
-            
-            if (homingSuccessful) {
-                uiManager->displayHomingCompleteMessage();
-                delay(systemConfig.statusMessageDisplayTimeMilliseconds);
+            // Long press (3+ seconds) = Calibration mode
+            if (pressDuration >= 3000) {
+                Serial.println("========================================");
+                Serial.println("BUTTON 6 LONG PRESS - CALIBRATION MODE");
+                Serial.println("========================================");
+                
+                uiManager->displayCustomMessageOnRow(0, "Calibration...");
+                uiManager->displayCustomMessageOnRow(1, "Measuring...");
+                
+                bool calibrationSuccessful = dispenserController->calibrateFullRotationTiming();
+                
+                if (calibrationSuccessful) {
+                    uiManager->displayCustomMessageOnRow(0, "Calibration OK");
+                    uiManager->displayCustomMessageOnRow(1, "Check Serial");
+                    delay(3000);
+                } else {
+                    uiManager->displayCustomMessageOnRow(0, "Calibration");
+                    uiManager->displayCustomMessageOnRow(1, "FAILED!");
+                    delay(3000);
+                }
             } else {
-                uiManager->displayCustomMessageOnRow(1, "Homing FAILED!");
-                delay(systemConfig.errorMessageDisplayTimeMilliseconds);
+                // Short press = Normal homing
+                Serial.println("========================================");
+                Serial.println("BUTTON 6 PRESSED - INITIATING HOMING");
+                Serial.println("========================================");
+                
+                uiManager->displayHomingInProgressMessage();
+                
+                bool homingSuccessful = dispenserController->performHomingWithRetryAndEscalation();
+                
+                if (homingSuccessful) {
+                    uiManager->displayHomingCompleteMessage();
+                    delay(systemConfig.statusMessageDisplayTimeMilliseconds);
+                } else {
+                    uiManager->displayCustomMessageOnRow(1, "Homing FAILED!");
+                    delay(systemConfig.errorMessageDisplayTimeMilliseconds);
+                }
             }
             
             // Update LCD to show ready status
