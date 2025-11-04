@@ -1,0 +1,332 @@
+#ifndef BLE_MANAGER_H
+#define BLE_MANAGER_H
+
+#include <Arduino.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+#include "Config.h"
+#include "ConfigurationSettings.h"
+
+/**
+ * Command structure for parsed BLE commands
+ */
+struct BLECommand {
+    enum CommandType {
+        NONE,
+        DISPENSE,
+        STATUS,
+        RESET,
+        HOME
+    };
+    
+    CommandType commandType;
+    int compartmentNumber;
+    int pillCount;
+    
+    BLECommand() : commandType(NONE), compartmentNumber(0), pillCount(1) {}
+};
+
+/**
+ * Forward declarations for callback classes
+ */
+class BLEConnectionCallbacks;
+class BLECharacteristicWriteCallbacks;
+
+/**
+ * BLEManager Class
+ * 
+ * Responsible for all Bluetooth Low Energy communication including:
+ * - BLE server initialization and configuration
+ * - Connection state management
+ * - Command parsing from connected devices
+ * - Response notifications to connected devices
+ * 
+ * This class has minimal dependencies and returns commands for execution
+ * by the main loop, maintaining low coupling.
+ */
+class BLEManager {
+private:
+    SystemConfiguration* systemConfiguration;
+    BLEServer* bluetoothLEServer;
+    BLECharacteristic* commandCharacteristic;
+    bool isDeviceCurrentlyConnectedViaBluetooth;
+    bool wasDeviceConnectedInPreviousLoop;
+    BLECommand mostRecentCommandReceived;
+    bool hasNewCommandToProcess;
+    
+    friend class BLEConnectionCallbacks;
+    friend class BLECharacteristicWriteCallbacks;
+    
+public:
+    /**
+     * Constructor
+     * @param config Pointer to system configuration
+     */
+    BLEManager(SystemConfiguration* config) {
+        systemConfiguration = config;
+        bluetoothLEServer = nullptr;
+        commandCharacteristic = nullptr;
+        isDeviceCurrentlyConnectedViaBluetooth = false;
+        wasDeviceConnectedInPreviousLoop = false;
+        hasNewCommandToProcess = false;
+    }
+    
+    /**
+     * Initialize BLE server and start advertising
+     */
+    void initializeBluetoothLEServer();
+    
+    /**
+     * Update connection state and handle reconnection
+     * Call this in main loop
+     */
+    void updateConnectionStateInMainLoop() {
+        // Handle device disconnection
+        if (!isDeviceCurrentlyConnectedViaBluetooth && wasDeviceConnectedInPreviousLoop) {
+            delay(systemConfiguration->bleReconnectionDelayMilliseconds);
+            bluetoothLEServer->startAdvertising();
+            Serial.println("BLE: Restarting advertising after disconnection");
+            wasDeviceConnectedInPreviousLoop = isDeviceCurrentlyConnectedViaBluetooth;
+        }
+        
+        // Handle device connection
+        if (isDeviceCurrentlyConnectedViaBluetooth && !wasDeviceConnectedInPreviousLoop) {
+            wasDeviceConnectedInPreviousLoop = isDeviceCurrentlyConnectedViaBluetooth;
+        }
+    }
+    
+    /**
+     * Check if a device is currently connected
+     * @return true if BLE device is connected
+     */
+    bool isBluetoothDeviceConnected() {
+        return isDeviceCurrentlyConnectedViaBluetooth;
+    }
+    
+    /**
+     * Check if there is a new command to process
+     * @return true if new command is available
+     */
+    bool hasNewCommandAvailableToProcess() {
+        return hasNewCommandToProcess;
+    }
+    
+    /**
+     * Get the most recent command (and mark as processed)
+     * @return BLECommand structure with command details
+     */
+    BLECommand getAndClearMostRecentCommand() {
+        hasNewCommandToProcess = false;
+        return mostRecentCommandReceived;
+    }
+    
+    /**
+     * Send success response to connected device
+     * @param message Success message to send
+     */
+    void sendSuccessResponseToConnectedDevice(String message) {
+        if (commandCharacteristic != nullptr && isDeviceCurrentlyConnectedViaBluetooth) {
+            String response = "{status:OK, message:\"" + message + "\"}";
+            commandCharacteristic->setValue(response.c_str());
+            commandCharacteristic->notify();
+            Serial.print("BLE Response: ");
+            Serial.println(response);
+        }
+    }
+    
+    /**
+     * Send error response to connected device
+     * @param errorMessage Error message to send
+     */
+    void sendErrorResponseToConnectedDevice(String errorMessage) {
+        if (commandCharacteristic != nullptr && isDeviceCurrentlyConnectedViaBluetooth) {
+            String response = "{status:ERROR, message:\"" + errorMessage + "\"}";
+            commandCharacteristic->setValue(response.c_str());
+            commandCharacteristic->notify();
+            Serial.print("BLE Error Response: ");
+            Serial.println(response);
+        }
+    }
+    
+    /**
+     * Send dispense result to connected device
+     * @param successCount Number of pills successfully dispensed
+     * @param requestedCount Number of pills requested
+     */
+    void sendDispenseResultToConnectedDevice(int successCount, int requestedCount) {
+        if (commandCharacteristic != nullptr && isDeviceCurrentlyConnectedViaBluetooth) {
+            String response = "{status:OK, dispensed:" + String(successCount) + 
+                            ", requested:" + String(requestedCount) + "}";
+            commandCharacteristic->setValue(response.c_str());
+            commandCharacteristic->notify();
+            Serial.print("BLE Dispense Result: ");
+            Serial.println(response);
+        }
+    }
+    
+    /**
+     * Send statistics status to connected device
+     * @param compartmentCounts Array of dispense counts per compartment
+     * @param numberOfCompartments Number of compartments
+     */
+    void sendStatisticsStatusToConnectedDevice(int* compartmentCounts, int numberOfCompartments) {
+        if (commandCharacteristic != nullptr && isDeviceCurrentlyConnectedViaBluetooth) {
+            String response = "{status:OK, compartments:[";
+            for (int i = 0; i < numberOfCompartments; i++) {
+                response += String(compartmentCounts[i]);
+                if (i < numberOfCompartments - 1) response += ",";
+            }
+            response += "]}";
+            commandCharacteristic->setValue(response.c_str());
+            commandCharacteristic->notify();
+            Serial.print("BLE Statistics: ");
+            Serial.println(response);
+        }
+    }
+    
+    /**
+     * Parse incoming BLE command string
+     * @param commandString Raw command string from BLE
+     */
+    void parseBLECommandAndExtractParameters(String commandString) {
+        Serial.print("Parsing BLE command: ");
+        Serial.println(commandString);
+        
+        mostRecentCommandReceived = BLECommand();  // Reset to defaults
+        
+        if (commandString.startsWith("DISPENSE:")) {
+            // Format: DISPENSE:COMPARTMENT or DISPENSE:COMPARTMENT:COUNT
+            mostRecentCommandReceived.commandType = BLECommand::DISPENSE;
+            
+            int firstColonPosition = commandString.indexOf(':');
+            int secondColonPosition = commandString.indexOf(':', firstColonPosition + 1);
+            
+            // Extract compartment number
+            String compartmentString = commandString.substring(
+                firstColonPosition + 1,
+                secondColonPosition > 0 ? secondColonPosition : commandString.length()
+            );
+            mostRecentCommandReceived.compartmentNumber = compartmentString.toInt();
+            
+            // Extract count if present
+            if (secondColonPosition > 0) {
+                String countString = commandString.substring(secondColonPosition + 1);
+                mostRecentCommandReceived.pillCount = countString.toInt();
+                if (mostRecentCommandReceived.pillCount < 1) {
+                    mostRecentCommandReceived.pillCount = 1;
+                }
+            }
+            
+            hasNewCommandToProcess = true;
+        }
+        else if (commandString == "STATUS") {
+            mostRecentCommandReceived.commandType = BLECommand::STATUS;
+            hasNewCommandToProcess = true;
+        }
+        else if (commandString == "RESET") {
+            mostRecentCommandReceived.commandType = BLECommand::RESET;
+            hasNewCommandToProcess = true;
+        }
+        else if (commandString == "HOME") {
+            mostRecentCommandReceived.commandType = BLECommand::HOME;
+            hasNewCommandToProcess = true;
+        }
+        else {
+            Serial.println("ERROR: Unknown BLE command");
+            sendErrorResponseToConnectedDevice("Unknown command: " + commandString);
+        }
+    }
+};
+
+// Global pointer for callback access
+BLEManager* globalBLEManagerInstance = nullptr;
+
+/**
+ * BLE Server Connection Callbacks
+ * Handles connect/disconnect events
+ */
+class BLEConnectionCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+        if (globalBLEManagerInstance != nullptr) {
+            globalBLEManagerInstance->isDeviceCurrentlyConnectedViaBluetooth = true;
+            Serial.println("BLE: Device connected");
+        }
+    }
+    
+    void onDisconnect(BLEServer* pServer) {
+        if (globalBLEManagerInstance != nullptr) {
+            globalBLEManagerInstance->isDeviceCurrentlyConnectedViaBluetooth = false;
+            Serial.println("BLE: Device disconnected");
+        }
+    }
+};
+
+/**
+ * BLE Characteristic Write Callbacks
+ * Handles incoming command data
+ */
+class BLECharacteristicWriteCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+        if (globalBLEManagerInstance != nullptr) {
+            String receivedValue = pCharacteristic->getValue();
+            
+            if (receivedValue.length() > 0) {
+                String commandString = String(receivedValue.c_str());
+                globalBLEManagerInstance->parseBLECommandAndExtractParameters(commandString);
+            }
+        }
+    }
+};
+
+/**
+ * Initialize BLE server (implementation must be after callback class definitions)
+ */
+void BLEManager::initializeBluetoothLEServer() {
+    Serial.println("Initializing BLE server...");
+    
+    // Initialize BLE device
+    BLEDevice::init(BLE_DEVICE_NAME);
+    
+    // Create BLE server
+    bluetoothLEServer = BLEDevice::createServer();
+    bluetoothLEServer->setCallbacks(new BLEConnectionCallbacks());
+    
+    // Create BLE service
+    BLEService* pillDispenserService = bluetoothLEServer->createService(BLE_SERVICE_UUID);
+    
+    // Create BLE characteristic with read, write, and notify properties
+    commandCharacteristic = pillDispenserService->createCharacteristic(
+        BLE_CHARACTERISTIC_UUID,
+        BLECharacteristic::PROPERTY_READ |
+        BLECharacteristic::PROPERTY_WRITE |
+        BLECharacteristic::PROPERTY_NOTIFY
+    );
+    
+    // Set characteristic callbacks
+    commandCharacteristic->setCallbacks(new BLECharacteristicWriteCallbacks());
+    
+    // Add descriptor for notifications
+    commandCharacteristic->addDescriptor(new BLE2902());
+    
+    // Start the service
+    pillDispenserService->start();
+    
+    // Configure advertising
+    BLEAdvertising* advertising = BLEDevice::getAdvertising();
+    advertising->addServiceUUID(BLE_SERVICE_UUID);
+    advertising->setScanResponse(true);
+    advertising->setMinPreferred(systemConfiguration->bleMinimumConnectionIntervalPreference);
+    advertising->setMinPreferred(systemConfiguration->bleMaximumConnectionIntervalPreference);
+    
+    // Start advertising
+    BLEDevice::startAdvertising();
+    
+    Serial.println("BLE server initialized and advertising started");
+    Serial.print("Device name: ");
+    Serial.println(BLE_DEVICE_NAME);
+}
+
+#endif // BLE_MANAGER_H
+
