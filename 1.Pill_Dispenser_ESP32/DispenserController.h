@@ -203,7 +203,9 @@ public:
         Serial.println("========================================");
         
         int maxAttempts = systemConfiguration->homingRetryAttempts;
-        int baseDelay = systemConfiguration->stepperHomingStepDelayMicroseconds;
+        // With symmetric pulse timing, base delay = 2 × pulseWidth
+        int basePulseWidth = systemConfiguration->stepperStepPulseWidthMicroseconds;
+        int baseDelay = basePulseWidth * 2;  // Total time per step = 2 × pulseWidth
         int delayDecrement = systemConfiguration->homingDelayDecrementPerRetry;  // Decrease delay = increase speed
         int baseTimeout = MAXIMUM_HOMING_TIMEOUT_MILLISECONDS;
         int timeoutIncrement = systemConfiguration->homingTimeoutIncrementPerRetry;
@@ -218,8 +220,9 @@ public:
             
             // Calculate step delay for this attempt (decreasing delay = faster speed for retries)
             int attemptDelay = baseDelay - ((attempt - 1) * delayDecrement);
-            // Ensure delay doesn't go below minimum safe value
-            int minDelay = systemConfiguration->stepperMinStepDelayMicroseconds;
+            // Ensure delay doesn't go below minimum safe value (2 × minPulseWidth)
+            int minPulseWidth = systemConfiguration->stepperMinStepPulseWidthMicroseconds;
+            int minDelay = minPulseWidth * 2;  // Total time per step = 2 × pulseWidth
             attemptDelay = constrain(attemptDelay, minDelay, baseDelay);
             
             // Calculate timeout for this attempt (increasing with each retry)
@@ -454,7 +457,8 @@ public:
         
         // Step 2: Move off switch (backward) so we can detect it again
         Serial.println("[Calibration] Step 2: Moving backward off switch...");
-        int stepDelay = systemConfiguration->stepperHomingStepDelayMicroseconds;
+        // With symmetric pulse timing, use the pulse width directly
+        int stepDelay = systemConfiguration->stepperStepPulseWidthMicroseconds * 2;  // Total time per step
         long stepsToMoveOff = hardwareController->calculateStepsForAngle(10.0);
         long stepsMoved = hardwareController->moveStepperBackwardBySteps(stepsToMoveOff, stepDelay);
         updatePositionAfterMovement(stepsMoved);
@@ -483,9 +487,11 @@ public:
         
         Serial.print("[Calibration] Rotating ");
         Serial.print(stepsForFullRotation);
-        Serial.print(" steps (360°) at ");
+        Serial.print(" steps (360°) with pulse width ");
+        Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
+        Serial.print(" μs (total ");
         Serial.print(stepDelay);
-        Serial.println(" μs delay");
+        Serial.println(" μs per step)");
         
         // Enable motor for forward rotation
         hardwareController->enableStepperMotor(true);  // Forward
@@ -495,7 +501,7 @@ public:
         unsigned long lastLogTime = 0;
         
         while (!sensorManager->isHomePositionSwitchActivated()) {
-            // Generate step
+            // Generate step (symmetric pulse timing built into the function)
             hardwareController->rotateStepperForwardContinuous(stepDelay);
             stepCount++;
             
@@ -549,9 +555,11 @@ public:
         Serial.print("Steps per second: ");
         Serial.print(stepsPerSecond);
         Serial.println(" steps/sec");
-        Serial.print("Step delay used: ");
+        Serial.print("Pulse width used: ");
+        Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
+        Serial.print(" μs (total ");
         Serial.print(stepDelay);
-        Serial.println(" μs");
+        Serial.println(" μs per step)");
         Serial.println("");
         
         // Calculate time to each compartment
@@ -679,8 +687,8 @@ public:
             return true;
         }
         
-        // Get step delay for movement
-        int stepDelay = systemConfiguration->stepperRunningStepDelayMicroseconds;
+        // Get step delay for movement (with symmetric pulse timing, delay = 2 × pulseWidth)
+        int stepDelay = systemConfiguration->stepperStepPulseWidthMicroseconds * 2;
         Serial.print("[Positioning] Step delay: ");
         Serial.print(stepDelay);
         Serial.println(" μs");

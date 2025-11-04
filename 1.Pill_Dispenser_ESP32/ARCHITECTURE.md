@@ -3,10 +3,10 @@
 ## Module Dependency Graph
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Main Arduino Sketch                         │
-│                      NewCodeLara.ino                            │
-│                                                                 │
+┌────────────────────────────────────────────────────────────────┐
+│                     Main Arduino Sketch                        │
+│                      NewCodeLara.ino                           │
+│                                                                │
 │  • Orchestrates all modules                                    │
 │  • Initializes system                                          │
 │  • Routes BLE commands                                         │

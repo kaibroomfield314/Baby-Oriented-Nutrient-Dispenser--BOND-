@@ -146,13 +146,32 @@ int servoDispensingAngleInDegrees = 90;
 2. Set stepperMicrostepping (check your driver settings: 1, 2, 4, 8, or 16)
 3. Set stepperGearRatio (1.0 if no gear reduction, otherwise your ratio)
 4. Calibrate step delay timing (step pulse frequency):
-   - Start with stepperHomingStepDelayMicroseconds = 1500μs (slower, safer - ~667 steps/sec)
-   - Start with stepperRunningStepDelayMicroseconds = 1000μs (faster for normal movement - ~1000 steps/sec)
-   - Test minimum delay: Start with 50μs, reduce until motor misses steps
+   - Start with stepperHomingStepDelayMicroseconds = 10000μs (slower, safer - ~100 steps/sec, ~30 RPM)
+   - Start with stepperRunningStepDelayMicroseconds = 10000μs (faster for normal movement - ~100 steps/sec)
+   - Test minimum delay: Start with 500μs, reduce until motor misses steps
    - Set stepperMinStepDelayMicroseconds to safe minimum (prevents motor damage)
-   - Set stepperMaxStepDelayMicroseconds for slowest speed (5000μs default - ~200 steps/sec)
+   - Set stepperMaxStepDelayMicroseconds for slowest speed (50000μs default - ~20 steps/sec, ~6 RPM)
    - Lower delay = faster speed (higher step frequency), higher delay = slower speed (lower step frequency)
-   - Typical range: 200-2000μs delay (500-5000 steps per second)
+
+### Speed Range Reference
+
+**Speed Calculation:**
+- Steps per second = 1,000,000 / delay_in_microseconds
+- RPM = (Steps per second × 60) / (stepsPerRevolution × microstepping × gearRatio)
+
+**Speed Range Table (for 200 steps/rev motor, 1x microstepping, 1:1 gear ratio):**
+
+| Delay (μs) | Steps/sec | RPM | Full Rotation Time | Use Case |
+|------------|-----------|-----|-------------------|----------|
+| 500 (min) | 2,000 | ~600 RPM | 0.1 sec | Very fast (may miss steps) |
+| 1,000 | 1,000 | ~300 RPM | 0.2 sec | Fast |
+| 5,000 | 200 | ~60 RPM | 1.0 sec | Medium |
+| 10,000 | 100 | ~30 RPM | 2.0 sec | Slow (current default) |
+| 20,000 | 50 | ~15 RPM | 4.0 sec | Very slow |
+| 50,000 (max) | 20 | ~6 RPM | 10.0 sec | Extremely slow |
+
+**Typical working range:** 5,000-20,000μs delay (200-50 steps/sec, 60-15 RPM)
+
 5. Test positioning accuracy:
    - Home system
    - Move to each compartment and verify position

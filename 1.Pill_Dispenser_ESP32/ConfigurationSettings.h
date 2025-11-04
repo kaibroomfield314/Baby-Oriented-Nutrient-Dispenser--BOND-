@@ -34,25 +34,44 @@ struct SystemConfiguration {
     int stepperMicrostepping = 1;               // Microstepping setting on driver (1, 2, 4, 8, 16)
     float stepperGearRatio = 1.0;               // Gear reduction ratio (1.0 if no gear reduction)
     
-    // Step pulse timing - DIRECT DELAY VALUES (CALIBRATE THESE!)
-    // These are the delays BETWEEN step pulses in microseconds
-    // Lower delay = faster speed, higher delay = slower speed
-    int stepperHomingStepDelayMicroseconds = 4000;   // Delay between steps during homing (slower for accuracy)
-    int stepperRunningStepDelayMicroseconds = 4000;  // Delay between steps for normal movement (faster)
+    // Step pulse timing - SYMMETRIC PULSE WIDTH (from test code)
+    // Uses symmetric pulse pattern: HIGH for stepPulseWidth, LOW for stepPulseWidth
+    // Total time per step = 2 × stepPulseWidth
+    // Speed calculation: Steps/sec = 1,000,000 / (2 × stepPulseWidth)
+    // Example: 15000μs pulse width = 30,000μs per step = ~33 steps/sec = ~10 RPM (for 200 steps/rev motor)
+    // This provides slower, smoother movement compared to fast pulses with delays
+    int stepperStepPulseWidthMicroseconds = 15000;   // Pulse width (HIGH and LOW time) - from test code
     
-    // Safety limits for step delay (to prevent motor damage)
-    int stepperMinStepDelayMicroseconds = 500;        // Minimum safe delay (fastest speed) - adjust based on motor/driver limits
-    int stepperMaxStepDelayMicroseconds = 5000;     // Maximum delay (slowest speed) - for very slow movements
+    // Legacy delay parameters (kept for compatibility, but not used with symmetric pulse timing)
+    // These are now calculated from stepPulseWidth
+    int stepperHomingStepDelayMicroseconds = 15000;   // Not used directly, kept for compatibility
+    int stepperRunningStepDelayMicroseconds = 15000;  // Not used directly, kept for compatibility
+    
+    // Safety limits for step pulse width (to prevent motor damage)
+    int stepperMinStepPulseWidthMicroseconds = 10000;   // Minimum safe pulse width (fastest speed) - adjust based on motor/driver limits
+    int stepperMaxStepPulseWidthMicroseconds = 50000;  // Maximum pulse width (slowest speed) - for very slow movements
     
     // Calculate total steps per revolution with microstepping and gear ratio
     // stepsPerRevolution = stepperStepsPerRevolution * stepperMicrostepping * stepperGearRatio
     
     // ========================================================================
-    // Servo Positioning Settings (angles in degrees: 0-180)
+    // Servo Positioning Settings (microseconds for precise control)
     // ========================================================================
-    int servoRestPositionAngleInDegrees = 0;           // Home/rest position
-    int servoDispensingAngleInDegrees = 180;            // Position to release pill
-    int servoMovementDelayMilliseconds = 500;          // Wait time after servo movement
+    // Servo uses microseconds for precise control (typical range: 500-2500μs)
+    // These values are calculated as MIN_SAFE and MAX_SAFE (from test code)
+    int servoMinMicroseconds = 150;          // Minimum servo position (adjust for your servo)
+    int servoMaxMicroseconds = 2100;        // Maximum servo position (adjust for your servo)
+    int servoEndMarginMicroseconds = 0;     // Back off from hard stops to avoid stall
+    
+    // Calculated safe endpoints (computed in setup)
+    // MIN_SAFE = servoMinMicroseconds + servoEndMarginMicroseconds
+    // MAX_SAFE = servoMaxMicroseconds - servoEndMarginMicroseconds
+    
+    // Servo motion parameters (from test code)
+    int servoStepMicroseconds = 60;         // Step size for servo movement (larger = faster motion)
+    int servoStepDelayMilliseconds = 1;     // Delay between steps (smaller = faster)
+    
+    int servoMovementDelayMilliseconds = 500;  // Wait time after servo movement completes
     
     // ========================================================================
     // Pill Detection Settings

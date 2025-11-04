@@ -88,8 +88,10 @@ public:
         pinMode(PIN_FOR_GREEN_STATUS_LED, OUTPUT);
         digitalWrite(PIN_FOR_GREEN_STATUS_LED, LOW);
         
-        // Attach and initialize servo
-        dispenserServoMotor.attach(PIN_FOR_SERVO_MOTOR_SIGNAL);
+        // Attach and initialize servo with min/max microseconds (from test code)
+        int minSafe = getServoMinSafe();
+        int maxSafe = getServoMaxSafe();
+        dispenserServoMotor.attach(PIN_FOR_SERVO_MOTOR_SIGNAL, minSafe, maxSafe);
         moveServoToRestPosition();
         
         Serial.println("[Stepper DEBUG] Hardware initialization complete");
@@ -102,37 +104,43 @@ public:
     // ========================================================================
     
     /**
-     * Validate and constrain step delay to safe limits
-     * @param stepDelayMicroseconds Requested delay in microseconds
-     * @return Validated delay within safe limits
+     * Validate and constrain step pulse width to safe limits
+     * @param pulseWidthMicroseconds Requested pulse width in microseconds
+     * @return Validated pulse width within safe limits
      */
-    int validateStepDelay(int stepDelayMicroseconds) {
-        int minDelay = systemConfiguration->stepperMinStepDelayMicroseconds;
-        int maxDelay = systemConfiguration->stepperMaxStepDelayMicroseconds;
+    int validateStepPulseWidth(int pulseWidthMicroseconds) {
+        int minWidth = systemConfiguration->stepperMinStepPulseWidthMicroseconds;
+        int maxWidth = systemConfiguration->stepperMaxStepPulseWidthMicroseconds;
         
-        int validatedDelay = constrain(stepDelayMicroseconds, minDelay, maxDelay);
+        int validatedWidth = constrain(pulseWidthMicroseconds, minWidth, maxWidth);
         
-        if (validatedDelay != stepDelayMicroseconds) {
-            Serial.print("[Stepper DEBUG] Step delay ");
-            Serial.print(stepDelayMicroseconds);
+        if (validatedWidth != pulseWidthMicroseconds) {
+            Serial.print("[Stepper DEBUG] Step pulse width ");
+            Serial.print(pulseWidthMicroseconds);
             Serial.print(" μs adjusted to ");
-            Serial.print(validatedDelay);
+            Serial.print(validatedWidth);
             Serial.print(" μs (limits: ");
-            Serial.print(minDelay);
+            Serial.print(minWidth);
             Serial.print("-");
-            Serial.print(maxDelay);
-            Serial.println(" μs)");
-        } else {
-            Serial.print("[Stepper DEBUG] Step delay: ");
-            Serial.print(validatedDelay);
-            Serial.print(" μs (valid, limits: ");
-            Serial.print(minDelay);
-            Serial.print("-");
-            Serial.print(maxDelay);
+            Serial.print(maxWidth);
             Serial.println(" μs)");
         }
         
-        return validatedDelay;
+        return validatedWidth;
+    }
+    
+    /**
+     * Validate and constrain step delay to safe limits (legacy function, kept for compatibility)
+     * With symmetric pulse timing, this validates the pulse width instead
+     * @param stepDelayMicroseconds Requested delay in microseconds
+     * @return Validated delay within safe limits (for compatibility, but not used directly)
+     */
+    int validateStepDelay(int stepDelayMicroseconds) {
+        // With symmetric pulse timing, validate the pulse width instead
+        // Delay is 2 × pulse width, so we validate pulse width = delay / 2
+        int pulseWidth = stepDelayMicroseconds / 2;
+        int validatedWidth = validateStepPulseWidth(pulseWidth);
+        return validatedWidth * 2;  // Return as delay for compatibility
     }
     
     /**
@@ -173,7 +181,8 @@ public:
     /**
      * Generate a single step pulse
      * STEP pin: HIGH→LOW transition triggers step on most stepper drivers
-     * Must have minimum pulse width for reliable operation
+     * Uses symmetric pulse timing (like test code): HIGH for step_us, LOW for step_us
+     * This provides slower, smoother movement compared to fast pulses with delays
      */
     void generateStepPulse() {
         stepPulseCount++;
@@ -186,15 +195,21 @@ public:
             Serial.flush();
         }
         
+        // Symmetric pulse timing (integrated from test code)
+        // HIGH for step_us microseconds, then LOW for step_us microseconds
+        int stepPulseWidth = systemConfiguration->stepperStepPulseWidthMicroseconds;
+        
         digitalWrite(PIN_FOR_STEPPER_STEP, HIGH);
-        delayMicroseconds(5);  // Minimum pulse width (increased for reliability)
+        delayMicroseconds(stepPulseWidth);
         digitalWrite(PIN_FOR_STEPPER_STEP, LOW);
         
         if (stepPulseCount % 100 == 0) {
-            Serial.println(" → LOW");
+            Serial.print(" → LOW (pulse width: ");
+            Serial.print(stepPulseWidth);
+            Serial.println(" μs)");
         }
         
-        delayMicroseconds(2);  // Minimum time LOW before next pulse
+        delayMicroseconds(stepPulseWidth);  // Symmetric LOW time
     }
     
     /**
@@ -256,22 +271,21 @@ public:
     
     /**
      * Generate a step pulse with timing (for continuous rotation loops)
-     * This is more efficient than calling enableStepperMotor repeatedly
-     * @param stepDelay Total delay in microseconds between steps (including pulse width)
+     * With symmetric pulse timing, generateStepPulse() already handles the timing,
+     * so this function just calls it (no additional delay needed)
+     * @param stepDelay Not used with symmetric pulse timing (kept for compatibility)
      */
     void stepWithDelay(int stepDelay) {
-        generateStepPulse();  // This already includes ~7μs of delays (5μs HIGH + 2μs LOW)
-        // Additional delay to reach total stepDelay
-        if (stepDelay > 7) {
-            delayMicroseconds(stepDelay - 7);  // Account for pulse width delays
-        }
+        // With symmetric pulse timing, the delay is built into generateStepPulse()
+        // Each step takes: stepPulseWidth HIGH + stepPulseWidth LOW = 2 × stepPulseWidth
+        generateStepPulse();
         
         // Log every 1000 steps for continuous rotation
         if (stepPulseCount % 1000 == 0 && stepPulseCount > 0) {
             Serial.print("[Stepper DEBUG] Continuous rotation: ");
             Serial.print(stepPulseCount);
-            Serial.print(" steps completed, delay=");
-            Serial.print(stepDelay);
+            Serial.print(" steps completed, pulse width=");
+            Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
             Serial.println(" μs");
         }
     }
@@ -291,25 +305,23 @@ public:
         // Enable stepper motor
         enableStepperMotor(true);  // true = forward
         
-        // Calculate steps and validate delay
+        // Calculate steps (symmetric pulse timing built into generateStepPulse)
         long steps = calculateStepsForAngle(angleInDegrees);
-        int validatedDelay = validateStepDelay(stepDelayMicroseconds);
         
         Serial.print("[Stepper DEBUG] Movement parameters: ");
         Serial.print(angleInDegrees);
         Serial.print("°, ");
         Serial.print(steps);
-        Serial.print(" steps, delay ");
-        Serial.print(validatedDelay);
+        Serial.print(" steps, pulse width ");
+        Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
         Serial.println(" μs");
         
         Serial.println("[Stepper DEBUG] Starting step pulse generation...");
         
-        // Generate step pulses
+        // Generate step pulses (symmetric timing built into generateStepPulse)
         unsigned long startTime = millis();
         for (long i = 0; i < steps; i++) {
-            generateStepPulse();
-            delayMicroseconds(validatedDelay);
+            generateStepPulse();  // Includes symmetric HIGH/LOW timing
             
             // Log progress every 10% or every 100 steps
             if ((i + 1) % 100 == 0 || (i + 1) == steps || (steps > 10 && (i + 1) % (steps / 10) == 0)) {
@@ -359,21 +371,18 @@ public:
         // Enable stepper motor
         enableStepperMotor(true);  // true = forward
         
-        int validatedDelay = validateStepDelay(stepDelayMicroseconds);
-        
         Serial.print("[Stepper DEBUG] Movement: ");
         Serial.print(steps);
-        Serial.print(" steps forward, delay ");
-        Serial.print(validatedDelay);
+        Serial.print(" steps forward, pulse width ");
+        Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
         Serial.println(" μs");
         
         Serial.println("[Stepper DEBUG] Starting step pulse generation...");
         
-        // Generate step pulses
+        // Generate step pulses (symmetric timing built into generateStepPulse)
         unsigned long startTime = millis();
         for (long i = 0; i < steps; i++) {
-            generateStepPulse();
-            delayMicroseconds(validatedDelay);
+            generateStepPulse();  // Includes symmetric HIGH/LOW timing
             
             // Log progress every 100 steps
             if ((i + 1) % 100 == 0 || (i + 1) == steps) {
@@ -424,21 +433,18 @@ public:
         // Enable stepper motor
         enableStepperMotor(false);  // false = backward
         
-        int validatedDelay = validateStepDelay(stepDelayMicroseconds);
-        
         Serial.print("[Stepper DEBUG] Movement: ");
         Serial.print(steps);
-        Serial.print(" steps backward, delay ");
-        Serial.print(validatedDelay);
+        Serial.print(" steps backward, pulse width ");
+        Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
         Serial.println(" μs");
         
         Serial.println("[Stepper DEBUG] Starting step pulse generation...");
         
-        // Generate step pulses
+        // Generate step pulses (symmetric timing built into generateStepPulse)
         unsigned long startTime = millis();
         for (long i = 0; i < steps; i++) {
-            generateStepPulse();
-            delayMicroseconds(validatedDelay);
+            generateStepPulse();  // Includes symmetric HIGH/LOW timing
             
             // Log progress every 100 steps
             if ((i + 1) % 100 == 0 || (i + 1) == steps) {
@@ -483,25 +489,23 @@ public:
         // Enable stepper motor
         enableStepperMotor(false);  // false = backward
         
-        // Calculate steps and validate delay
+        // Calculate steps (symmetric pulse timing built into generateStepPulse)
         long steps = calculateStepsForAngle(angleInDegrees);
-        int validatedDelay = validateStepDelay(stepDelayMicroseconds);
         
         Serial.print("[Stepper DEBUG] Movement parameters: ");
         Serial.print(angleInDegrees);
         Serial.print("°, ");
         Serial.print(steps);
-        Serial.print(" steps, delay ");
-        Serial.print(validatedDelay);
+        Serial.print(" steps, pulse width ");
+        Serial.print(systemConfiguration->stepperStepPulseWidthMicroseconds);
         Serial.println(" μs");
         
         Serial.println("[Stepper DEBUG] Starting step pulse generation...");
         
-        // Generate step pulses
+        // Generate step pulses (symmetric timing built into generateStepPulse)
         unsigned long startTime = millis();
         for (long i = 0; i < steps; i++) {
-            generateStepPulse();
-            delayMicroseconds(validatedDelay);
+            generateStepPulse();  // Includes symmetric HIGH/LOW timing
             
             // Log progress every 10% or every 100 steps
             if ((i + 1) % 100 == 0 || (i + 1) == steps || (steps > 10 && (i + 1) % (steps / 10) == 0)) {
@@ -664,33 +668,103 @@ public:
     // ========================================================================
     
     /**
-     * Move servo to a specific angle
-     * @param angleInDegrees Target angle (0-180)
+     * Get calculated safe servo endpoints
      */
-    void moveServoToAngleInDegrees(int angleInDegrees) {
-        // Constrain angle to valid range
-        angleInDegrees = constrain(angleInDegrees, 0, 180);
-        
-        dispenserServoMotor.write(angleInDegrees);
-        Serial.print("Servo moved to angle: ");
-        Serial.print(angleInDegrees);
-        Serial.println(" degrees");
+    int getServoMinSafe() {
+        return systemConfiguration->servoMinMicroseconds + systemConfiguration->servoEndMarginMicroseconds;
+    }
+    
+    int getServoMaxSafe() {
+        return systemConfiguration->servoMaxMicroseconds - systemConfiguration->servoEndMarginMicroseconds;
     }
     
     /**
-     * Move servo to rest/home position
+     * Move servo to a specific position in microseconds (from test code)
+     * @param targetMicroseconds Target position in microseconds
+     */
+    void moveServoToMicroseconds(int targetMicroseconds) {
+        int minSafe = getServoMinSafe();
+        int maxSafe = getServoMaxSafe();
+        
+        // Constrain to safe range
+        targetMicroseconds = constrain(targetMicroseconds, minSafe, maxSafe);
+        
+        // Ensure servo is attached
+        if (!dispenserServoMotor.attached()) {
+            dispenserServoMotor.attach(PIN_FOR_SERVO_MOTOR_SIGNAL, minSafe, maxSafe);
+        }
+        
+        // Get current position
+        int current = dispenserServoMotor.readMicroseconds();
+        if (current < minSafe || current > maxSafe) {
+            current = minSafe;  // Clamp to known good start
+            dispenserServoMotor.writeMicroseconds(current);
+            delay(5);
+        }
+        
+        // Determine step direction and size
+        int step = (targetMicroseconds >= current) ? systemConfiguration->servoStepMicroseconds : -systemConfiguration->servoStepMicroseconds;
+        
+        // Move in steps to target position
+        for (int us = current; (step > 0 ? us <= targetMicroseconds : us >= targetMicroseconds); us += step) {
+            dispenserServoMotor.writeMicroseconds(us);
+            delay(systemConfiguration->servoStepDelayMilliseconds);
+        }
+        
+        Serial.print("Servo moved to: ");
+        Serial.print(targetMicroseconds);
+        Serial.println(" microseconds");
+    }
+    
+    /**
+     * Move servo to rest/home position (minimum position)
      */
     void moveServoToRestPosition() {
-        int restAngle = systemConfiguration->servoRestPositionAngleInDegrees;
-        moveServoToAngleInDegrees(restAngle);
+        int minSafe = getServoMinSafe();
+        moveServoToMicroseconds(minSafe);
     }
     
     /**
-     * Move servo to dispensing position
+     * Move servo to maximum position (for dispensing)
+     */
+    void moveServoToMaxPosition() {
+        int maxSafe = getServoMaxSafe();
+        moveServoToMicroseconds(maxSafe);
+    }
+    
+    /**
+     * Servo full arc sweep: min → max → min (for pill dispensing)
+     * This sweeps the full range to ensure pill release
+     */
+    void servoFullArcSweep() {
+        Serial.println("[Servo] Starting full arc sweep (min → max → min)");
+        
+        int minSafe = getServoMinSafe();
+        int maxSafe = getServoMaxSafe();
+        
+        // Ensure we start at minimum
+        moveServoToMicroseconds(minSafe);
+        
+        // Sweep to maximum
+        Serial.println("[Servo] Sweeping to maximum position...");
+        moveServoToMicroseconds(maxSafe);
+        
+        // Wait at maximum
+        delay(500);
+        
+        // Sweep back to minimum
+        Serial.println("[Servo] Sweeping back to minimum position...");
+        moveServoToMicroseconds(minSafe);
+        
+        Serial.println("[Servo] Full arc sweep complete");
+    }
+    
+    /**
+     * Move servo to dispensing position (sweeps full arc: min → max → min)
+     * This ensures pill release by sweeping the full range
      */
     void moveServoToDispensingPosition() {
-        int dispensingAngle = systemConfiguration->servoDispensingAngleInDegrees;
-        moveServoToAngleInDegrees(dispensingAngle);
+        servoFullArcSweep();
     }
     
     /**
