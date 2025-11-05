@@ -1,0 +1,42 @@
+# Xcode
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcworkspace
+xcuserdata/
+DerivedData/
+Build/
+
+# Xcode Specific
+.DS_Store
+*.swiftpm
+*.package.resolved
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# SPM
+.swiftpm/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.temp
