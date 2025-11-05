@@ -1,0 +1,30 @@
+{
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Models/PillSchedule.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/PillSchedule.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/PillSchedule.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/PillSchedule.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/PillSchedule.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/PillSchedule.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Models/SideEffect.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/SideEffect.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/SideEffect.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/SideEffect.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/SideEffect.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/SideEffect.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Models/Symptom.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/Symptom.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/Symptom.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/Symptom.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/Symptom.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/Symptom.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Models/User.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/User.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/User.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/User.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/User.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOS.build/Objects-normal/arm64/User.swiftdeps"
+  }
+}

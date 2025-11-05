@@ -1,0 +1,30 @@
+{
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Utilities/ColorHelper.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/ColorHelper.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/ColorHelper.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/ColorHelper.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/ColorHelper.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/ColorHelper.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Utilities/Logger.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Logger.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Logger.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Logger.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Logger.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Logger.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Utilities/Theme.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Theme.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Theme.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Theme.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Theme.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/Theme.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS/Views/Adherence/AdherenceView.swift" : {
+    "const-values" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/AdherenceView.swiftconstvalues",
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/AdherenceView.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/AdherenceView.dia",
+    "object" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/AdherenceView.o",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphonesimulator/BOND-APP-IOS.build/Objects-normal/arm64/AdherenceView.swiftdeps"
+  }
+}
