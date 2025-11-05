@@ -1,0 +1,13 @@
+Target dependency graph (8 targets)
+Target 'BOND-APP-IOSUITests' in project 'BOND-APP-IOS' (no dependencies)
+Target 'BOND-APP-IOSUITests' in project 'BOND-APP-IOS'
+➜ Explicit dependency on target 'BOND-APP-IOS' in project 'BOND-APP-IOS'
+Target 'BOND-APP-IOSUITests' in project 'BOND-APP-IOS'
+➜ Explicit dependency on target 'BOND-APP-IOS' in project 'BOND-APP-IOS'
+Target 'BOND-APP-IOSTests' in project 'BOND-APP-IOS' (no dependencies)
+Target 'BOND-APP-IOSTests' in project 'BOND-APP-IOS'
+➜ Explicit dependency on target 'BOND-APP-IOS' in project 'BOND-APP-IOS'
+Target 'BOND-APP-IOSTests' in project 'BOND-APP-IOS'
+➜ Explicit dependency on target 'BOND-APP-IOS' in project 'BOND-APP-IOS'
+Target 'BOND-APP-IOS' in project 'BOND-APP-IOS' (no dependencies)
+Target 'BOND-APP-IOS' in project 'BOND-APP-IOS' (no dependencies)

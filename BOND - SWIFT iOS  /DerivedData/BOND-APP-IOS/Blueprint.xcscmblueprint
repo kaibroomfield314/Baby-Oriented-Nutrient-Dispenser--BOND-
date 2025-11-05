@@ -1,0 +1,23 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "924F7C5C6FAE754E11213CCAA006C52FED2FA7CD",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "924F7C5C6FAE754E11213CCAA006C52FED2FA7CD" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "6A2DBE1C-B845-432F-824B-974FF0453178",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "924F7C5C6FAE754E11213CCAA006C52FED2FA7CD" : "BOND-APP-IOS\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "BOND-APP-IOS",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "BOND-APP-IOS.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/kaibroomfield314\/BOND-APP-IOS.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "924F7C5C6FAE754E11213CCAA006C52FED2FA7CD"
+    }
+  ]
+}

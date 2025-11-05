@@ -1,0 +1,67 @@
+{
+  "buildCommand" : {
+    "command" : "prepareForIndexing",
+    "enableIndexBuildArena" : true,
+    "targets" : null
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "d20c0de7e0db784bc28ff0f30cb0f667cfd56d85aeaee526c70a04799faafe6c"
+    }
+  ],
+  "containerPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOS.xcodeproj",
+  "continueBuildingAfterErrors" : true,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "indexbuild",
+    "activeArchitecture" : "undefined_arch",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : true,
+      "platform" : "iphoneos",
+      "sdk" : "iphoneos26.1",
+      "sdkVariant" : "iphoneos",
+      "supportedArchitectures" : [
+        "armv4t",
+        "armv5",
+        "armv6",
+        "armv7",
+        "armv7f",
+        "armv7s",
+        "armv7k",
+        "arm64",
+        "arm64e"
+      ],
+      "targetArchitecture" : "undefined_arch"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Products",
+      "derivedDataPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData",
+      "indexDataStoreFolderPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/PrecompiledHeaders",
+      "indexRegularBuildIntermediatesPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Intermediates.noindex",
+      "indexRegularBuildProductsPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/Build/Products",
+      "pchPath" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "synthesized" : {
+        "table" : {
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "NO",
+          "ONLY_ACTIVE_ARCH" : "YES"
+        }
+      }
+    }
+  },
+  "qos" : "default",
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

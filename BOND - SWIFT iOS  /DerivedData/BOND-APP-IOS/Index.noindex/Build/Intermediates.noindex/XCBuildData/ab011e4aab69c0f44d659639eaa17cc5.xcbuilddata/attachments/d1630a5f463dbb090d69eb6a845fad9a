@@ -1,0 +1,16 @@
+{
+  "" : {
+    "dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOSUITests.build/Objects-normal/arm64/BOND-APP-IOSUITests-primary.d",
+    "diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOSUITests.build/Objects-normal/arm64/BOND-APP-IOSUITests-primary.dia",
+    "emit-module-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOSUITests.build/Objects-normal/arm64/BOND-APP-IOSUITests-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOSUITests.build/Objects-normal/arm64/BOND-APP-IOSUITests-primary-emit-module.dia",
+    "pch" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOSUITests.build/Objects-normal/arm64/BOND-APP-IOSUITests-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/DerivedData/BOND-APP-IOS/Index.noindex/Build/Intermediates.noindex/BOND-APP-IOS.build/Debug-iphoneos/BOND-APP-IOSUITests.build/Objects-normal/arm64/BOND-APP-IOSUITests-primary.swiftdeps"
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOSUITests/BOND_APP_IOSUITests.swift" : {
+
+  },
+  "/Users/kaibroomfield/kaibroomfield/Uni Folder/UNI Y3S2/ETIP (Engineering Technology Innovation Project)/BOND-APP-IOS/BOND-APP-IOSUITests/BOND_APP_IOSUITestsLaunchTests.swift" : {
+
+  }
+}
