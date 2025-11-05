@@ -12,18 +12,18 @@
         }
 
         :root {
-            --primary: #4A90E2;
-            --primary-dark: #2E5C8A;
-            --secondary: #50C878;
-            --danger: #E74C3C;
-            --warning: #F39C12;
-            --light-bg: #F5F7FA;
+            --primary: #1E40AF;
+            --primary-dark: #1E3A8A;
+            --secondary: #059669;
+            --danger: #DC2626;
+            --warning: #D97706;
+            --light-bg: #F9FAFB;
             --card-bg: #FFFFFF;
-            --text-primary: #2C3E50;
-            --text-secondary: #7F8C8D;
-            --border: #E0E6ED;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         body {
@@ -700,17 +700,18 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-brand">
-                <h2><span class="icon">💊</span> BOND</h2>
+                <h2>BOND</h2>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Medication Manager</p>
             </div>
             <ul class="sidebar-menu">
-                <li><a class="nav-link active" onclick="showSection('dashboard')"><span class="icon">📊</span> Dashboard</a></li>
-                <li><a class="nav-link" onclick="showSection('pills')"><span class="icon">💊</span> Pills</a></li>
-                <li><a class="nav-link" onclick="showSection('schedule')"><span class="icon">📅</span> Schedule</a></li>
-                <li><a class="nav-link" onclick="showSection('appointments')"><span class="icon">🏥</span> Appointments</a></li>
+                <li><a class="nav-link active" onclick="showSection('dashboard')"><span class="icon">▦</span> Dashboard</a></li>
+                <li><a class="nav-link" onclick="showSection('pills')"><span class="icon">◆</span> Medications</a></li>
+                <li><a class="nav-link" onclick="showSection('schedule')"><span class="icon">□</span> Schedule</a></li>
+                <li><a class="nav-link" onclick="showSection('appointments')"><span class="icon">▲</span> Appointments</a></li>
                 <li><a class="nav-link" onclick="showSection('adherence')"><span class="icon">✓</span> Adherence</a></li>
-                <li><a class="nav-link" onclick="showSection('symptoms')"><span class="icon">🤒</span> Symptoms</a></li>
-                <li><a class="nav-link" onclick="showSection('side-effects')"><span class="icon">⚠️</span> Side Effects</a></li>
-                <li><a class="nav-link" onclick="showSection('settings')"><span class="icon">⚙️</span> Settings</a></li>
+                <li><a class="nav-link" onclick="showSection('symptoms')"><span class="icon">◎</span> Symptoms</a></li>
+                <li><a class="nav-link" onclick="showSection('side-effects')"><span class="icon">⚬</span> Side Effects</a></li>
+                <li><a class="nav-link" onclick="showSection('settings')"><span class="icon">⚙</span> Settings</a></li>
             </ul>
         </div>
 
@@ -733,22 +734,22 @@
                 <div class="section active" id="dashboard">
                     <div class="dashboard-grid">
                         <div class="stat-card">
-                            <div class="label">Total Pills</div>
+                            <div class="label">Active Medications</div>
                             <div class="value" id="total-pills">0</div>
-                            <div class="subtext">Currently tracking</div>
+                            <div class="subtext">Currently tracked</div>
                         </div>
                         <div class="stat-card">
                             <div class="label">Today's Adherence</div>
                             <div class="value" id="today-adherence">0%</div>
-                            <div class="subtext">Pills taken today</div>
+                            <div class="subtext">Medications taken</div>
                         </div>
                         <div class="stat-card">
-                            <div class="label">This Week</div>
+                            <div class="label">Weekly Adherence</div>
                             <div class="value" id="week-adherence">0%</div>
-                            <div class="subtext">Average adherence</div>
+                            <div class="subtext">Average rate</div>
                         </div>
                         <div class="stat-card">
-                            <div class="label">Upcoming</div>
+                            <div class="label">Scheduled Today</div>
                             <div class="value" id="upcoming-pills">0</div>
                             <div class="subtext">Next 24 hours</div>
                         </div>
@@ -761,8 +762,8 @@
                         </div>
                         <div id="todays-schedule">
                             <div class="empty-state">
-                                <div class="empty-state-icon">📋</div>
-                                <div class="empty-state-text">No pills scheduled for today</div>
+                                <div class="empty-state-icon">—</div>
+                                <div class="empty-state-text">No medications scheduled for today</div>
                             </div>
                         </div>
                     </div>
@@ -773,19 +774,19 @@
                         </div>
                         <div id="upcoming-appointments">
                             <div class="empty-state">
-                                <div class="empty-state-icon">🏥</div>
+                                <div class="empty-state-icon">—</div>
                                 <div class="empty-state-text">No upcoming appointments</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pills Section -->
+                <!-- Medications Section -->
                 <div class="section" id="pills">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">My Pills</h3>
-                            <button class="btn btn-primary" onclick="showModal('add-pill')">+ Add Pill</button>
+                            <h3 class="card-title">Current Medications</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-pill')">+ Add Medication</button>
                         </div>
                         <div id="pills-list"></div>
                     </div>
@@ -795,21 +796,21 @@
                 <div class="section" id="schedule">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Weekly Schedule</h3>
+                            <h3 class="card-title">Weekly Medication Schedule</h3>
                             <button class="btn btn-primary" onclick="showModal('add-schedule')">+ Add Schedule</button>
                         </div>
                         <div class="table-container">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Pill</th>
-                                        <th>Monday</th>
-                                        <th>Tuesday</th>
-                                        <th>Wednesday</th>
-                                        <th>Thursday</th>
-                                        <th>Friday</th>
-                                        <th>Saturday</th>
-                                        <th>Sunday</th>
+                                        <th>Medication</th>
+                                        <th>Mon</th>
+                                        <th>Tue</th>
+                                        <th>Wed</th>
+                                        <th>Thu</th>
+                                        <th>Fri</th>
+                                        <th>Sat</th>
+                                        <th>Sun</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -824,8 +825,8 @@
                 <div class="section" id="appointments">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Appointments</h3>
-                            <button class="btn btn-primary" onclick="showModal('add-appointment')">+ New Appointment</button>
+                            <h3 class="card-title">Medical Appointments</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-appointment')">+ Schedule Appointment</button>
                         </div>
                         <div id="appointments-list"></div>
                     </div>
@@ -835,7 +836,7 @@
                 <div class="section" id="adherence">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Adherence Tracking</h3>
+                            <h3 class="card-title">Medication Adherence</h3>
                             <select onchange="changeAdherenceMonth(this.value)">
                                 <option value="0">This Month</option>
                                 <option value="-1">Last Month</option>
@@ -847,17 +848,17 @@
 
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Statistics</h3>
+                            <h3 class="card-title">Adherence Statistics</h3>
                         </div>
                         <div class="table-container">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Pill</th>
-                                        <th>Total Scheduled</th>
+                                        <th>Medication</th>
+                                        <th>Scheduled</th>
                                         <th>Taken</th>
                                         <th>Missed</th>
-                                        <th>Adherence %</th>
+                                        <th>Adherence Rate</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adherence-stats">
@@ -871,8 +872,8 @@
                 <div class="section" id="symptoms">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Symptoms Log</h3>
-                            <button class="btn btn-primary" onclick="showModal('add-symptom')">+ Log Symptom</button>
+                            <h3 class="card-title">Symptom Log</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-symptom')">+ Record Symptom</button>
                         </div>
                         <div id="symptoms-list"></div>
                     </div>
@@ -882,8 +883,8 @@
                 <div class="section" id="side-effects">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Side Effects Log</h3>
-                            <button class="btn btn-primary" onclick="showModal('add-side-effect')">+ Log Side Effect</button>
+                            <h3 class="card-title">Adverse Effect Log</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-side-effect')">+ Record Adverse Effect</button>
                         </div>
                         <div id="side-effects-list"></div>
                     </div>
@@ -941,16 +942,16 @@
     </div>
 
     <!-- Modals -->
-    <!-- Add/Edit Pill Modal -->
+    <!-- Add/Edit Medication Modal -->
     <div class="modal" id="add-pill">
         <div class="modal-content">
-            <div class="modal-header">Add Pill</div>
+            <div class="modal-header">Add Medication</div>
             <div class="form-group">
-                <label>Pill Name</label>
+                <label>Medication Name</label>
                 <input type="text" id="pill-name" placeholder="e.g., Aspirin">
             </div>
             <div class="form-group">
-                <label>Dosage</label>
+                <label>Dosage Strength</label>
                 <input type="text" id="pill-dosage" placeholder="e.g., 500mg">
             </div>
             <div class="form-group">
@@ -976,9 +977,9 @@
     <!-- Add Appointment Modal -->
     <div class="modal" id="add-appointment">
         <div class="modal-content">
-            <div class="modal-header">New Appointment</div>
+            <div class="modal-header">Schedule Appointment</div>
             <div class="form-group">
-                <label>Doctor Name</label>
+                <label>Healthcare Provider</label>
                 <input type="text" id="appt-doctor" placeholder="e.g., Dr. Smith">
             </div>
             <div class="form-group">
@@ -1007,9 +1008,9 @@
     <!-- Add Symptom Modal -->
     <div class="modal" id="add-symptom">
         <div class="modal-content">
-            <div class="modal-header">Log Symptom</div>
+            <div class="modal-header">Record Symptom</div>
             <div class="form-group">
-                <label>Symptom</label>
+                <label>Symptom Type</label>
                 <select id="symptom-name">
                     <option>Headache</option>
                     <option>Fever</option>
@@ -1039,16 +1040,16 @@
         </div>
     </div>
 
-    <!-- Add Side Effect Modal -->
+    <!-- Add Adverse Effect Modal -->
     <div class="modal" id="add-side-effect">
         <div class="modal-content">
-            <div class="modal-header">Log Side Effect</div>
+            <div class="modal-header">Record Adverse Effect</div>
             <div class="form-group">
-                <label>Pill</label>
+                <label>Medication</label>
                 <select id="sideeffect-pill"></select>
             </div>
             <div class="form-group">
-                <label>Side Effect</label>
+                <label>Adverse Effect Type</label>
                 <select id="sideeffect-name">
                     <option>Drowsiness</option>
                     <option>Dizziness</option>
@@ -1081,9 +1082,9 @@
     <!-- Add Schedule Modal -->
     <div class="modal" id="add-schedule">
         <div class="modal-content">
-            <div class="modal-header">Add Schedule</div>
+            <div class="modal-header">Create Medication Schedule</div>
             <div class="form-group">
-                <label>Pill</label>
+                <label>Medication</label>
                 <select id="schedule-pill"></select>
             </div>
             <div class="form-group">
@@ -1190,12 +1191,12 @@
             // Update title
             const titles = {
                 dashboard: 'Dashboard',
-                pills: 'My Pills',
-                schedule: 'Weekly Schedule',
-                appointments: 'Appointments',
-                adherence: 'Adherence Tracking',
-                symptoms: 'Symptoms',
-                'side-effects': 'Side Effects',
+                pills: 'Current Medications',
+                schedule: 'Weekly Medication Schedule',
+                appointments: 'Medical Appointments',
+                adherence: 'Medication Adherence',
+                symptoms: 'Symptom Log',
+                'side-effects': 'Adverse Effect Log',
                 settings: 'Settings'
             };
             document.getElementById('page-title').textContent = titles[sectionId] || 'Dashboard';
@@ -1297,7 +1298,7 @@
         function updatePillsList() {
             const container = document.getElementById('pills-list');
             if (appData.pills.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💊</div><div class="empty-state-text">No pills added yet</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No medications added yet</div></div>';
                 return;
             }
 
@@ -1325,7 +1326,7 @@
             };
 
             if (!pill.name || !pill.dosage) {
-                alert('Please fill in all fields');
+                alert('Please complete all required fields.');
                 return;
             }
 
@@ -1342,7 +1343,7 @@
         }
 
         function deletePill(id) {
-            if (confirm('Delete this pill?')) {
+            if (confirm('Are you sure you want to delete this medication? This action cannot be undone.')) {
                 appData.pills = appData.pills.filter(p => p.id !== id);
                 appData.schedules = appData.schedules.filter(s => s.pillId !== id);
                 saveData();
@@ -1379,7 +1380,7 @@
             const days = Array.from(document.querySelectorAll('.schedule-day:checked')).map(c => parseInt(c.value));
 
             if (!time || days.length === 0) {
-                alert('Please select time and at least one day');
+                alert('Please select time and at least one day of the week.');
                 return;
             }
 
@@ -1403,7 +1404,7 @@
         function updateAppointmentsList() {
             const container = document.getElementById('appointments-list');
             if (appData.appointments.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏥</div><div class="empty-state-text">No appointments scheduled</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No appointments scheduled</div></div>';
                 return;
             }
 
@@ -1432,7 +1433,7 @@
             };
 
             if (!appt.doctor || !appt.datetime) {
-                alert('Please fill in all fields');
+                alert('Please complete all required fields.');
                 return;
             }
 
@@ -1529,14 +1530,14 @@
             }
             saveData();
             updateDashboard();
-            alert('Pill marked as taken!');
+            alert('Medication recorded as taken.');
         }
 
         // Symptoms
         function updateSymptomsList() {
             const container = document.getElementById('symptoms-list');
             if (appData.symptoms.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🤒</div><div class="empty-state-text">No symptoms logged</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No symptoms recorded</div></div>';
                 return;
             }
 
@@ -1582,7 +1583,7 @@
         function updateSideEffectsList() {
             const container = document.getElementById('side-effects-list');
             if (appData.sideEffects.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">No side effects logged</div></div>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">—</div><div class="empty-state-text">No adverse effects recorded</div></div>';
                 return;
             }
 
@@ -1632,7 +1633,7 @@
             appData.user.email = document.getElementById('user-email').value;
             appData.user.dob = document.getElementById('user-dob').value;
             saveData();
-            alert('Settings saved!');
+            alert('Settings saved successfully.');
         }
 
         function toggleDevice() {
@@ -1653,7 +1654,7 @@
         }
 
         function clearAllData() {
-            if (confirm('This will delete all data. Are you sure?')) {
+            if (confirm('This will permanently delete all data. Are you sure you want to proceed?')) {
                 localStorage.clear();
                 location.reload();
             }
