@@ -9,67 +9,24 @@
  * All timing values are in milliseconds unless otherwise specified.
  */
 struct SystemConfiguration {
-    // ========================================================================
-    // Stepper Motor Settings
-    // ========================================================================
-    // 
-    // HOW STEPPER MOTORS WORK:
-    // - Stepper motors move in discrete steps (not continuous like DC motors)
-    // - Speed = step pulse frequency (how fast pulses are sent)
-    // - Speed is controlled by delay between step pulses: speed = 1 / delay_between_steps
-    // - Lower delay = faster movement, higher delay = slower movement
-    // - Each step pulse moves motor by: 360° / (stepsPerRevolution * microstepping * gearRatio)
-    //
-    // STEPPER MOTOR SPEED CONTROL:
-    // - Stepper motors use step pulse frequency to control speed
-    // - Speed = 1 / (delay_between_steps_in_microseconds)
-    // - We use direct step delay values (in microseconds) - this is how stepper motors work
-    // - Lower delay = higher step frequency = faster movement
-    // - Higher delay = lower step frequency = slower movement
-    // - User calibrates these values based on motor/driver capabilities and mechanical load
-    //
+    int stepperStepsPerRevolution = 200;
+    int stepperMicrostepping = 1;
+    float stepperGearRatio = 1.0;
     
-    // Stepper motor mechanical configuration (CALIBRATE THESE!)
-    int stepperStepsPerRevolution = 200;        // Steps per full rotation (200 for 1.8° motor, 400 for 0.9°)
-    int stepperMicrostepping = 1;               // Microstepping setting on driver (1, 2, 4, 8, 16)
-    float stepperGearRatio = 1.0;               // Gear reduction ratio (1.0 if no gear reduction)
+    int stepperStepPulseWidthMicroseconds = 15000;
     
-    // Step pulse timing - SYMMETRIC PULSE WIDTH (from test code)
-    // Uses symmetric pulse pattern: HIGH for stepPulseWidth, LOW for stepPulseWidth
-    // Total time per step = 2 × stepPulseWidth
-    // Speed calculation: Steps/sec = 1,000,000 / (2 × stepPulseWidth)
-    // Example: 15000μs pulse width = 30,000μs per step = ~33 steps/sec = ~10 RPM (for 200 steps/rev motor)
-    // This provides slower, smoother movement compared to fast pulses with delays
-    int stepperStepPulseWidthMicroseconds = 15000;   // Pulse width (HIGH and LOW time) - from test code
+    int stepperHomingStepDelayMicroseconds = 15000;
+    int stepperRunningStepDelayMicroseconds = 15000;
     
-    // Legacy delay parameters (kept for compatibility, but not used with symmetric pulse timing)
-    // These are now calculated from stepPulseWidth
-    int stepperHomingStepDelayMicroseconds = 15000;   // Not used directly, kept for compatibility
-    int stepperRunningStepDelayMicroseconds = 15000;  // Not used directly, kept for compatibility
+    int stepperMinStepPulseWidthMicroseconds = 10000;
+    int stepperMaxStepPulseWidthMicroseconds = 50000;
     
-    // Safety limits for step pulse width (to prevent motor damage)
-    int stepperMinStepPulseWidthMicroseconds = 10000;   // Minimum safe pulse width (fastest speed) - adjust based on motor/driver limits
-    int stepperMaxStepPulseWidthMicroseconds = 50000;  // Maximum pulse width (slowest speed) - for very slow movements
+    int servoMinMicroseconds = 150;
+    int servoMaxMicroseconds = 2100;
+    int servoEndMarginMicroseconds = 0;
     
-    // Calculate total steps per revolution with microstepping and gear ratio
-    // stepsPerRevolution = stepperStepsPerRevolution * stepperMicrostepping * stepperGearRatio
-    
-    // ========================================================================
-    // Servo Positioning Settings (microseconds for precise control)
-    // ========================================================================
-    // Servo uses microseconds for precise control (typical range: 500-2500μs)
-    // These values are calculated as MIN_SAFE and MAX_SAFE (from test code)
-    int servoMinMicroseconds = 150;          // Minimum servo position (adjust for your servo)
-    int servoMaxMicroseconds = 2100;        // Maximum servo position (adjust for your servo)
-    int servoEndMarginMicroseconds = 0;     // Back off from hard stops to avoid stall
-    
-    // Calculated safe endpoints (computed in setup)
-    // MIN_SAFE = servoMinMicroseconds + servoEndMarginMicroseconds
-    // MAX_SAFE = servoMaxMicroseconds - servoEndMarginMicroseconds
-    
-    // Servo motion parameters (from test code)
-    int servoStepMicroseconds = 60;         // Step size for servo movement (larger = faster motion)
-    int servoStepDelayMilliseconds = 1;     // Delay between steps (smaller = faster)
+    int servoStepMicroseconds = 60;
+    int servoStepDelayMilliseconds = 1;
     
     int servoMovementDelayMilliseconds = 500;  // Wait time after servo movement completes
     
@@ -102,24 +59,13 @@ struct SystemConfiguration {
     int maximumDispenseAttempts = 3;                   // Retry attempts if pill not detected
     int numberOfCompartmentsInDispenser = 5;           // Total compartments in rotary dispenser
 
-	// Container Positions (degrees from START position = switch position)
-    // ARRAY-BASED: Each container can have custom position
-
 	float containerPositionsInDegrees[5] = {
-		0.0,        // Container 1: at home/START position (0°)
-		65.0,       // Container 2: 72° from START (evenly spaced)
-		144.0,      // Container 3: 144° from START (evenly spaced)
-		216.0,      // Container 4: 216° from START (evenly spaced)
-		288.0       // Container 5: 288° from START (evenly spaced)
+		0.0,
+		65.0,
+		144.0,
+		216.0,
+		288.0
 	};
-    // These positions are evenly spaced: 0°, 72°, 144°, 216°, 288°
-    // To customize: Simply change the angle values above for any container
-    // Movement times (at 1253ms per 360° rotation):
-    // - Compartment 1: 0ms (at home)
-    // - Compartment 2: ~251ms (72°)
-    // - Compartment 3: ~501ms (144°)
-    // - Compartment 4: ~752ms (216°)
-    // - Compartment 5: ~1002ms (288°)
     
     // ========================================================================
     // Homing Sequence Settings

@@ -77,50 +77,16 @@ public:
      */
     bool waitForHomeSwitchActivationWithTimeout(unsigned long timeoutMilliseconds) {
         unsigned long startTimeMillis = millis();
-        // Logging trimmed: only initial and final messages shown
-        
-        // Log initial state
-        int initialPinState = digitalRead(PIN_FOR_HOME_POSITION_SWITCH);
-        bool initialActivated = isHomePositionSwitchActivated();
-        Serial.print("[Homing] Initial raw pin: ");
-        Serial.print(initialPinState == HIGH ? "HIGH (1)" : "LOW (0)");
-        Serial.print(" | Activated: ");
-        Serial.println(initialActivated ? "YES" : "NO");
-        
-        // No continuous logging of state changes
         
         while (!isHomePositionSwitchActivated()) {
-            unsigned long currentTime = millis();
-            unsigned long elapsed = currentTime - startTimeMillis;
-            
-            // Check for timeout
-            if (elapsed > timeoutMilliseconds) {
-                Serial.print("[Homing] TIMEOUT after ");
-                Serial.print(elapsed);
-                Serial.println("ms - home switch never activated");
-                Serial.print("[Homing] Final raw pin: ");
-                Serial.println(digitalRead(PIN_FOR_HOME_POSITION_SWITCH) == HIGH ? "HIGH (1)" : "LOW (0)");
-                return false;  // Timeout occurred
+            if (millis() - startTimeMillis > timeoutMilliseconds) {
+                Serial.println("ERROR: Homing timeout - switch not activated");
+                return false;
             }
-            
-            // Periodic and state-change logs removed per requirements
-            
-            delay(10);  // Small delay to prevent tight polling
+            delay(10);
         }
         
-        // Home switch activated!
-        unsigned long finalElapsed = millis() - startTimeMillis;
-        int finalPinState = digitalRead(PIN_FOR_HOME_POSITION_SWITCH);
-        Serial.println("========================================");
-        Serial.print("[Homing] *** SUCCESS! *** Switch activated after ");
-        Serial.print(finalElapsed);
-        Serial.println("ms");
-        Serial.print("[Homing] Final raw pin: ");
-        Serial.print(finalPinState == HIGH ? "HIGH (1)" : "LOW (0)");
-        Serial.println(" | Activated: YES");
-        Serial.println("========================================");
-        
-        return true;  // Home switch activated successfully
+        return true;
     }
     
     /**
@@ -142,13 +108,11 @@ public:
         
         while (millis() - startTimeMillis < timeoutMillis) {
             if (isPillCurrentlyDetectedByInfraredSensor()) {
-                Serial.println("Pill detected by IR sensor!");
                 return true;
             }
             delay(checkIntervalMillis);
         }
         
-        Serial.println("No pill detected within timeout period");
         return false;
     }
     
@@ -165,7 +129,6 @@ public:
      */
     void resetEncoderPositionToZero() {
         currentEncoderPositionCounter = 0;
-        Serial.println("Encoder position reset to zero");
     }
     
     /**
@@ -191,9 +154,6 @@ public:
      * Must be called from global ISR with IRAM_ATTR
      */
     void handleHomeSwitchInterrupt() {
-        // Home switch triggered - can be used for immediate response if needed
-        // Currently just logs, but could set a flag for main loop
-        Serial.println("Home switch interrupt triggered");
     }
 };
 

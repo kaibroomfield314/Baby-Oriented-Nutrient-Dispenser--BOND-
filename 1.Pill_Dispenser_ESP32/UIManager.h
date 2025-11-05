@@ -73,8 +73,6 @@ public:
         pinMode(PIN_FOR_COMPARTMENT_BUTTON_5, INPUT_PULLUP);
         pinMode(PIN_FOR_NAVIGATION_BACK_BUTTON, INPUT_PULLUP);
         pinMode(PIN_FOR_NAVIGATION_SELECT_BUTTON, INPUT_PULLUP);
-        
-        Serial.println("LCD and button pins initialized");
     }
     
     // ========================================================================

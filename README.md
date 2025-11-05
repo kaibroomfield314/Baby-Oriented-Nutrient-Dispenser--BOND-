@@ -1,6 +1,6 @@
 # BOND - Baby-Oriented-Nutrient-Dispenser
 
-A comprehensive smart pill dispensing system consisting of an ESP32-based hardware controller and an iOS mobile application. BOND provides automated medication management with Bluetooth Low Energy (BLE) control, scheduling, adherence tracking, and comprehensive health monitoring features.
+A comprehensive smart pill dispensing system consisting of an ESP32-based hardware controller, an iOS mobile application, and a web-based desktop application. BOND provides automated medication management with Bluetooth Low Energy (BLE) control, scheduling, adherence tracking, and comprehensive health monitoring features across multiple platforms.
 
 ## Table of Contents
 
@@ -8,6 +8,7 @@ A comprehensive smart pill dispensing system consisting of an ESP32-based hardwa
 - [Project Structure](#project-structure)
 - [ESP32 Pill Dispenser System](#esp32-pill-dispenser-system)
 - [iOS Application](#ios-application)
+- [Web Application](#web-application)
 - [Test Code](#test-code)
 - [Hardware Requirements](#hardware-requirements)
 - [Getting Started](#getting-started)
@@ -24,7 +25,8 @@ BOND is a complete medication management system designed to help users (especial
 ### Key Features
 
 - **5-Compartment Rotary Dispenser**: Automated rotating pill storage with precise positioning
-- **Bluetooth Low Energy Control**: Wireless control and monitoring via iOS app
+- **Multi-Platform Control**: iOS mobile app and web-based desktop application
+- **Bluetooth Low Energy Control**: Wireless control and monitoring via mobile and web apps
 - **Automated Dispensing**: Servo-controlled dispensing mechanism with IR pill detection
 - **Smart Scheduling**: Medication schedules with automatic reminders
 - **Adherence Tracking**: Monitor medication compliance with detailed statistics
@@ -36,6 +38,7 @@ BOND is a complete medication management system designed to help users (especial
 - **Hardware**: ESP32 microcontroller with stepper motor, servo, electromagnet, and sensors
 - **Firmware**: Arduino/ESP32 with modular C++ architecture
 - **Mobile App**: Native iOS app built with SwiftUI
+- **Web App**: Single-page web application (HTML/CSS/JavaScript)
 - **Communication**: Bluetooth Low Energy (BLE) protocol
 
 ---
@@ -110,6 +113,9 @@ Baby-Oriented-Nutrient-Dispenser--BOND/
 │       └── Stepper_motor_single_rotation/
 │
 ├── Pill Dispenser UI/              # UI design files (currently empty)
+│
+├── web/                            # Web-based desktop application
+│   └── index.html                  # Single-page web app (HTML/CSS/JavaScript)
 │
 ├── Pin Out Pill Dispenser_20251101.xlsx  # Hardware wiring documentation
 │
@@ -404,6 +410,151 @@ The `BluetoothManager` handles all communication with the ESP32:
 
 ---
 
+## Web Application
+
+### Overview
+
+The BOND web application is a desktop-friendly single-page application (SPA) that provides a comprehensive interface for managing medications, schedules, and health data. It offers similar functionality to the iOS app but is optimized for desktop browsers and larger screens.
+
+### Features
+
+The web app includes 8 main sections:
+
+1. **Dashboard** - Overview statistics and today's schedule
+   - Total pills tracking
+   - Today's adherence percentage
+   - Weekly adherence average
+   - Upcoming pills in next 24 hours
+   - Today's schedule display
+
+2. **Pills** - Pill library management
+   - Add, edit, and delete pills
+   - Pill details (name, color, compartment, dosage, notes)
+   - Visual pill color coding
+
+3. **Schedule** - Medication scheduling
+   - Weekly schedule view (Monday-Sunday)
+   - Daily medication times
+   - Schedule management per pill
+
+4. **Appointments** - Medical appointment tracking
+   - Add appointments with doctor, specialty, date/time, location
+   - View and manage upcoming appointments
+   - Appointment notes
+
+5. **Adherence** - Medication compliance tracking
+   - Monthly calendar view with adherence status
+   - Daily adherence indicators (taken/missed/pending)
+   - Statistics table per pill
+   - Total scheduled, taken, missed counts
+   - Adherence percentage calculations
+
+6. **Symptoms** - Health symptom logging
+   - Log symptoms with date/time and severity
+   - Symptom tracking and history
+   - Notes for each symptom entry
+
+7. **Side Effects** - Medication side effect tracking
+   - Log side effects with date/time
+   - Track side effects per medication
+   - Notes and severity tracking
+
+8. **Settings** - User preferences and device management
+   - User profile (name, email, date of birth)
+   - Notification preferences
+   - Bluetooth device connection status
+   - Data management (clear all data)
+
+### Technical Details
+
+**Technology:**
+- Single HTML file with embedded CSS and JavaScript
+- No external dependencies (vanilla JavaScript)
+- LocalStorage for data persistence
+- Responsive design with modern CSS
+- No build process required
+
+**Browser Compatibility:**
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- Requires JavaScript enabled
+- Best viewed on desktop/laptop screens
+- Responsive design adapts to different screen sizes
+
+### Usage
+
+1. **Open the Application**
+   - Open `web/index.html` in any modern web browser
+   - No server required - works as a local file
+   - Can be hosted on any web server for remote access
+
+2. **Data Storage**
+   - All data is stored in browser's LocalStorage
+   - Data persists between browser sessions
+   - Data is browser-specific (not synced across devices)
+   - Use "Clear All Data" in Settings to reset
+
+3. **Device Connection**
+   - Bluetooth device connection status shown in header
+   - Device connection managed in Settings section
+   - Future implementation: Web Bluetooth API integration for direct ESP32 control
+
+4. **Navigation**
+   - Click sidebar menu items to navigate between sections
+   - Active section highlighted in sidebar
+   - Dashboard is the default landing page
+
+### Features in Detail
+
+**Dashboard:**
+- Real-time statistics cards
+- Quick access to today's schedule
+- Visual adherence indicators
+- Upcoming medication alerts
+
+**Pills Management:**
+- Color-coded pill library
+- Compartment assignment
+- Dosage and notes tracking
+- Quick add/edit interface
+
+**Schedule:**
+- Weekly grid view
+- Visual schedule representation
+- Easy schedule modification
+- Time-based organization
+
+**Adherence Tracking:**
+- Calendar-based visual tracking
+- Color-coded status (green=taken, red=missed, yellow=pending)
+- Monthly statistics
+- Per-pill adherence percentages
+
+**Data Management:**
+- LocalStorage persistence
+- Export/import capability (future enhancement)
+- Data clearing functionality
+- User preferences storage
+
+### Advantages Over Mobile App
+
+- **Larger Screen**: Better for viewing schedules and statistics
+- **Keyboard Input**: Faster data entry for multiple items
+- **No Installation**: Works directly in browser
+- **Cross-Platform**: Works on Windows, macOS, Linux
+- **Desktop Workflow**: Better for desktop-based workflows
+
+### Future Enhancements
+
+- Web Bluetooth API integration for direct ESP32 control
+- Cloud synchronization
+- Data export/import (JSON/CSV)
+- Multi-user support
+- Advanced analytics and reporting
+- Medication interaction warnings
+- Print-friendly views
+
+---
+
 ## Test Code
 
 The `Test Code/` directory contains individual component test sketches for hardware validation and debugging.
@@ -541,6 +692,7 @@ See `Pin Out Pill Dispenser_20251101.xlsx` for detailed wiring diagrams and pin 
 
 #### 5. Pairing App with Dispenser
 
+**iOS App:**
 1. Open BOND app on iOS device
 2. Navigate to "Connect" tab
 3. Ensure ESP32 is powered on and advertising as "PillDispenser"
@@ -548,6 +700,12 @@ See `Pin Out Pill Dispenser_20251101.xlsx` for detailed wiring diagrams and pin 
 5. Select "PillDispenser" from discovered devices
 6. Wait for connection (status will show "Connected")
 7. Test connection by sending a `HOME` command
+
+**Web App:**
+1. Open `web/index.html` in a web browser
+2. Navigate to Settings section
+3. Check device connection status
+4. (Web Bluetooth integration coming in future update)
 
 ### Basic Usage
 
@@ -582,6 +740,32 @@ See `Pin Out Pill Dispenser_20251101.xlsx` for detailed wiring diagrams and pin 
    - Open "Adherence" tab
    - View statistics and charts
    - Check compliance percentage
+
+#### Web App Operation
+
+1. **Open Application**:
+   - Open `web/index.html` in any modern web browser
+   - No installation required
+
+2. **Manage Pills**:
+   - Click "Pills" in sidebar
+   - Click "+ Add Pill" button
+   - Fill in pill details and save
+
+3. **Create Schedule**:
+   - Click "Schedule" in sidebar
+   - View weekly schedule grid
+   - Add times for each day
+
+4. **Track Adherence**:
+   - Click "Adherence" in sidebar
+   - View monthly calendar with adherence indicators
+   - Review statistics table
+
+5. **Log Symptoms/Side Effects**:
+   - Navigate to respective sections
+   - Click "Log Symptom" or "Log Side Effect"
+   - Fill in details and save
 
 ---
 
@@ -760,6 +944,7 @@ See `Pin Out Pill Dispenser_20251101.xlsx` for detailed wiring diagrams and pin 
 - ✅ BLE communication protocol
 - ✅ LCD display and button interface
 - ✅ iOS app with 9 main features
+- ✅ Web application with 8 main features
 - ✅ Pill management and scheduling
 - ✅ Adherence tracking
 - ✅ Health monitoring (side effects, symptoms, appointments)
@@ -778,6 +963,7 @@ See `Pin Out Pill Dispenser_20251101.xlsx` for detailed wiring diagrams and pin 
 
 - **ESP32 Firmware**: Version 2.0
 - **iOS App**: Version 1.0
+- **Web App**: Version 1.0
 - **Last Updated**: 2025
 
 ### Technology Stack
@@ -795,6 +981,13 @@ See `Pin Out Pill Dispenser_20251101.xlsx` for detailed wiring diagrams and pin 
 - Combine Framework (reactive programming)
 - CoreBluetooth Framework
 - iOS 18.6+ Deployment Target
+
+**Web Application:**
+- HTML5
+- CSS3 (Modern CSS with CSS Variables)
+- Vanilla JavaScript (ES6+)
+- LocalStorage API
+- No external dependencies
 
 ### Contributing
 
@@ -844,6 +1037,7 @@ RESET                   → Reset counters
 - **ESP32 Main Code**: `1.Pill_Dispenser_ESP32/1.Pill_Dispenser_ESP32.ino`
 - **Configuration**: `1.Pill_Dispenser_ESP32/ConfigurationSettings.h`
 - **iOS Project**: `BOND - SWIFT iOS/BOND-APP-IOS.xcodeproj`
+- **Web App**: `web/index.html`
 - **Wiring Diagram**: `Pin Out Pill Dispenser_20251101.xlsx`
 
 ---
