@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'BOND-APP-IOS' in project 'BOND-APP-IOS' (no dependencies)
