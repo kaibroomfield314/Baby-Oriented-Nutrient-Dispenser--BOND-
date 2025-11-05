@@ -348,10 +348,10 @@ currentPositionSteps = 0;  // Reset to home
 ### Problem: Motor misses steps
 
 **Solution:**
-- Increase `stepperMinStepDelayMicroseconds` (motor going too fast)
+- Increase `stepperMinStepPulseWidthMicroseconds` (motor going too fast - pulse width too low)
 - Check motor/driver connections
 - Reduce mechanical load
-- Verify step delay is within safe limits
+- Verify step pulse width is within safe limits (system uses symmetric pulse timing: HIGH for pulseWidth, LOW for pulseWidth)
 
 ## Calibration Function
 

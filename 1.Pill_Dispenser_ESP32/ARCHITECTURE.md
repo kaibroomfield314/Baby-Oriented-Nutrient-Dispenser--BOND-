@@ -5,7 +5,7 @@
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │                     Main Arduino Sketch                        │
-│                      NewCodeLara.ino                           │
+│                  1.Pill_Dispenser_ESP32.ino                    │
 │                                                                │
 │  • Orchestrates all modules                                    │
 │  • Initializes system                                          │
@@ -24,8 +24,8 @@
 │ • Connection   │ │ • Messages   │ │ • Dispensing│ │ • Angles       │
 └────────────────┘ └──────────────┘ │ • Statistics│ │ • Attempts     │
                                     └──────┬──────┘ └────────────────┘
-                                            │
-                        ┌───────────────────┴───────────────────┐
+                                           │
+                        ┌──────────────────┴────────────────────┐
                         │                                       │
                         v                                       v
               ┌───────────────────┐                  ┌─────────────────┐
@@ -61,7 +61,7 @@ iOS/Android Device
       ↓
 [BLE Command] → BLEManager.parseBLECommandAndExtractParameters()
       ↓
-BLECommand struct
+BLECommand struct (stored in BLEManager)
       ↓
 Main loop checks: bleManager->hasNewCommandAvailableToProcess()
       ↓
@@ -75,7 +75,7 @@ DispenserController.dispensePillsFromCompartment()
       ↓
 HardwareController + SensorManager (execute operation)
       ↓
-BLEManager.sendDispenseResultToConnectedDevice()
+BLEManager.sendDispenseResultToConnectedDevice() or sendErrorResponseToConnectedDevice()
       ↓
 iOS/Android Device
 ```

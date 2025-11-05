@@ -104,11 +104,10 @@ struct SystemConfiguration {
 
 	// Container Positions (degrees from START position = switch position)
     // ARRAY-BASED: Each container can have custom position
-    // Index 0 = Container 1, Index 1 = Container 2, etc.
-    // Evenly spaced: 360° / 5 compartments = 72° spacing
+
 	float containerPositionsInDegrees[5] = {
 		0.0,        // Container 1: at home/START position (0°)
-		72.0,       // Container 2: 72° from START (evenly spaced)
+		65.0,       // Container 2: 72° from START (evenly spaced)
 		144.0,      // Container 3: 144° from START (evenly spaced)
 		216.0,      // Container 4: 216° from START (evenly spaced)
 		288.0       // Container 5: 288° from START (evenly spaced)

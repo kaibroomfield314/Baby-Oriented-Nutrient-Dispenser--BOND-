@@ -202,6 +202,11 @@ public:
         Serial.println("Starting homing with retry capability");
         Serial.println("========================================");
         
+        // Move servo to minimum position during homing sequence
+        Serial.println("[Homing] Moving servo to minimum position...");
+        hardwareController->moveServoToRestPositionAndWait();
+        Serial.println("[Homing] Servo positioned at minimum");
+        
         int maxAttempts = systemConfiguration->homingRetryAttempts;
         // With symmetric pulse timing, base delay = 2 × pulseWidth
         int basePulseWidth = systemConfiguration->stepperStepPulseWidthMicroseconds;
@@ -744,16 +749,14 @@ public:
     // ========================================================================
     
     /**
-     * Attempt to dispense a single pill with multiple retry attempts
-     * @return true if pill successfully dispensed and detected, false otherwise
+     * Attempt to dispense pills and count IR sensor activations
+     * @return Number of pills detected (IR sensor activations) during the dispensing attempt
      */
-    bool attemptToDispenseSinglePillWithRetries() {
-        Serial.println("Beginning pill dispense operation...");
-        
+    int attemptToDispenseAndCountPills() {
         int maxAttempts = systemConfiguration->maximumDispenseAttempts;
         
         for (int attemptNumber = 1; attemptNumber <= maxAttempts; attemptNumber++) {
-            Serial.print("Dispense attempt ");
+            Serial.print("Attempt ");
             Serial.print(attemptNumber);
             Serial.print(" of ");
             Serial.println(maxAttempts);
@@ -761,31 +764,61 @@ public:
             // Step 1: Activate electromagnet to pick up pill
             hardwareController->activateElectromagnetAndWaitForStabilization();
             
-            // Step 2: Move servo to dispensing position
-            hardwareController->moveServoToDispensingPositionAndWait();
+            // Step 2: Get current servo position and move to max (or 180 degrees worth)
+            int startPosition = hardwareController->getCurrentServoPosition();
+            hardwareController->moveServoFromCurrentToMax();
             
-            // Step 3: Check if pill was detected
-            bool pillDetected = sensorManager->waitForPillDetectionWithTimeout();
+            // Step 3: Wait at extended position and count IR sensor activations
+            unsigned long waitStartTime = millis();
+            const unsigned long waitDurationMs = 2000;
+            int checkIntervalMs = systemConfiguration->pillDetectionCheckIntervalMilliseconds;
+            int pillCount = 0;
+            bool lastSensorState = false;
+            bool currentSensorState = false;
             
-            if (pillDetected) {
-                Serial.println("SUCCESS: Pill dispensed and detected!");
+            // Initialize sensor state - ensure we start with no pill detected
+            // Wait a moment for sensor to stabilize after servo movement
+            delay(50);
+            lastSensorState = sensorManager->isPillCurrentlyDetectedByInfraredSensor();
+            
+            // Count IR sensor activations (transitions from no pill to pill detected)
+            // isPillCurrentlyDetectedByInfraredSensor returns true when sensor is LOW (pill detected)
+            while (millis() - waitStartTime < waitDurationMs) {
+                currentSensorState = sensorManager->isPillCurrentlyDetectedByInfraredSensor();
                 
-                // Return servo to rest position
-                hardwareController->moveServoToRestPositionAndWait();
+                // Count transitions from HIGH (no pill) to LOW (pill detected)
+                // This counts each time a pill enters the detection zone
+                if (!lastSensorState && currentSensorState) {
+                    pillCount++;
+                    Serial.print("Pill detected: ");
+                    Serial.println(pillCount);
+                }
+                
+                lastSensorState = currentSensorState;
+                delay(checkIntervalMs);
+            }
+            
+            // Step 4: Move servo back to original position
+            Serial.print("[Dispensing] Returning servo to original position (");
+            Serial.print(startPosition);
+            Serial.println(" μs)");
+            hardwareController->moveServoToMicroseconds(startPosition);
+            delay(systemConfiguration->servoMovementDelayMilliseconds);
+            
+            // Step 6: Check if any pills were detected
+            if (pillCount > 0) {
+                Serial.print("SUCCESS: ");
+                Serial.print(pillCount);
+                Serial.println(" pill(s) dispensed");
                 
                 // Deactivate electromagnet
                 hardwareController->deactivateElectromagnetWithDelay();
                 
-                return true;
+                return pillCount;
             }
             
-            // Pill not detected - reset for next attempt
-            Serial.print("Attempt ");
-            Serial.print(attemptNumber);
-            Serial.println(" failed - no pill detected");
-            
-            // Return servo to rest position
-            hardwareController->moveServoToRestPositionAndWait();
+            // No pills detected - reset for next attempt
+            Serial.println("No pills detected");
             
             // Deactivate electromagnet
             hardwareController->deactivateElectromagnetWithDelay();
@@ -796,14 +829,15 @@ public:
             }
         }
         
-        return false;
+        Serial.println("No pills detected after all attempts");
+        return 0;
     }
     
     /**
      * Dispense pills from a specific compartment
      * @param compartmentNumber Target compartment (1-based)
      * @param numberOfPillsToDispense How many pills to dispense
-     * @return Number of pills successfully dispensed
+     * @return Number of pills successfully dispensed (counted by IR sensor)
      */
     int dispensePillsFromCompartment(int compartmentNumber, int numberOfPillsToDispense) {
         // Move to target compartment
@@ -811,17 +845,21 @@ public:
             return 0;  // Failed to move to compartment
         }
         
-        int successfulDispenseCount = 0;
+        int totalPillsDetected = 0;
         
         // Attempt to dispense requested number of pills
         for (int pillNumber = 0; pillNumber < numberOfPillsToDispense; pillNumber++) {
-            if (attemptToDispenseSinglePillWithRetries()) {
-                successfulDispenseCount++;
+            int pillsDetected = attemptToDispenseAndCountPills();
+            
+            if (pillsDetected > 0) {
+                totalPillsDetected += pillsDetected;
                 
-                // Update statistics
-                if (compartmentNumber >= 1 && 
-                    compartmentNumber <= systemConfiguration->numberOfCompartmentsInDispenser) {
-                    dispensedCountForEachCompartment[compartmentNumber - 1]++;
+                // Update statistics for each pill detected
+                for (int i = 0; i < pillsDetected; i++) {
+                    if (compartmentNumber >= 1 && 
+                        compartmentNumber <= systemConfiguration->numberOfCompartmentsInDispenser) {
+                        dispensedCountForEachCompartment[compartmentNumber - 1]++;
+                    }
                 }
             }
             
@@ -831,14 +869,14 @@ public:
             }
         }
         
-        Serial.print("Dispensed ");
-        Serial.print(successfulDispenseCount);
+        Serial.print("Total pills dispensed: ");
+        Serial.print(totalPillsDetected);
         Serial.print(" of ");
         Serial.print(numberOfPillsToDispense);
-        Serial.println(" requested pills");
+        Serial.println(" requested");
         
         // AUTO-HOME after successful dispense (if enabled)
-        if (systemConfiguration->autoHomeAfterDispense && successfulDispenseCount > 0) {
+        if (systemConfiguration->autoHomeAfterDispense && totalPillsDetected > 0) {
             Serial.println("========================================");
             Serial.println("[Auto-Home] Pill(s) dispensed successfully");
             Serial.println("[Auto-Home] Returning to home position...");
@@ -854,7 +892,7 @@ public:
             }
         }
         
-        return successfulDispenseCount;
+        return totalPillsDetected;
     }
     
     // ========================================================================

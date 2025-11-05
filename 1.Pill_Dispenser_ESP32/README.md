@@ -12,8 +12,8 @@
 ## File Structure
 
 ```
-NewCodeLara/
-├── NewCodeLara.ino               ← Main program
+1.Pill_Dispenser_ESP32/
+├── 1.Pill_Dispenser_ESP32.ino    ← Main program
 ├── Config.h                      ← Pin definitions
 ├── ConfigurationSettings.h       ← TUNE SETTINGS HERE ⭐
 ├── SensorManager.h               ← Sensors & interrupts
@@ -23,8 +23,6 @@ NewCodeLara/
 ├── UIManager.h                   ← LCD & buttons
 └── Documentation/
     ├── README.md                             (this file)
-    ├── BUTTON_REFERENCE.md                   Button assignments
-    ├── COMPARTMENT_POSITIONING_GUIDE.md      Positioning details
     ├── POSITIONING_SYSTEM_EXPLAINED.md       Math & calculations
     └── ARCHITECTURE.md                       Code structure
 ```
@@ -81,7 +79,7 @@ D2      = Status LED
 ## Quick Start
 
 ### 1. Upload Code
-1. Open `NewCodeLara.ino` in Arduino IDE
+1. Open `1.Pill_Dispenser_ESP32.ino` in Arduino IDE
 2. All `.h` files included automatically
 3. Select ESP32 board
 4. Click Upload
@@ -108,15 +106,16 @@ int stepperStepsPerRevolution = 200;        // Steps per rotation (200 for 1.8°
 int stepperMicrostepping = 1;               // Microstepping on driver (1, 2, 4, 8, 16)
 float stepperGearRatio = 1.0;               // Gear reduction (1.0 if none)
 
-// ⚠️ MUST CALIBRATE: Step pulse timing - DIRECT DELAY VALUES (in microseconds)
-// How stepper motors work: Speed = step pulse frequency (1 / delay_between_steps)
-// Lower delay = faster movement (higher frequency), higher delay = slower movement (lower frequency)
-int stepperHomingStepDelayMicroseconds = 1500;   // Delay between steps during homing (slower for accuracy)
-int stepperRunningStepDelayMicroseconds = 1000;   // Delay between steps for normal movement (faster)
+// ⚠️ MUST CALIBRATE: Step pulse timing - SYMMETRIC PULSE WIDTH (in microseconds)
+// How stepper motors work: Uses symmetric pulse timing (HIGH for pulseWidth, LOW for pulseWidth)
+// Total time per step = 2 × stepperStepPulseWidthMicroseconds
+// Speed = 1,000,000 / (2 × pulseWidth) steps per second
+// Lower pulse width = faster movement, higher pulse width = slower movement
+int stepperStepPulseWidthMicroseconds = 15000;   // Pulse width for HIGH and LOW phases (symmetric timing)
 
 // Safety limits (to prevent motor damage)
-int stepperMinStepDelayMicroseconds = 50;        // Minimum safe delay (fastest speed)
-int stepperMaxStepDelayMicroseconds = 5000;      // Maximum delay (slowest speed)
+int stepperMinStepPulseWidthMicroseconds = 10000;   // Minimum safe pulse width (fastest speed)
+int stepperMaxStepPulseWidthMicroseconds = 50000;    // Maximum pulse width (slowest speed)
 
 // Container positions (degrees from home/start position)
 // ARRAY-BASED: Customize any container position
@@ -135,7 +134,7 @@ bool autoHomeAfterDispense = true;  // Automatically home after successful pill 
 // Dispense settings
 int maximumDispenseAttempts = 3;
 int pillDetectionTimeoutMilliseconds = 2000;
-int servoDispensingAngleInDegrees = 90;
+// Note: Servo uses servoMinMicroseconds and servoMaxMicroseconds for full arc sweep
 ```
 
 ## Calibration (REQUIRED!)
@@ -145,38 +144,38 @@ int servoDispensingAngleInDegrees = 90;
 1. Set stepperStepsPerRevolution (typically 200 for 1.8° motor, 400 for 0.9°)
 2. Set stepperMicrostepping (check your driver settings: 1, 2, 4, 8, or 16)
 3. Set stepperGearRatio (1.0 if no gear reduction, otherwise your ratio)
-4. Calibrate step delay timing (step pulse frequency):
-   - Start with stepperHomingStepDelayMicroseconds = 10000μs (slower, safer - ~100 steps/sec, ~30 RPM)
-   - Start with stepperRunningStepDelayMicroseconds = 10000μs (faster for normal movement - ~100 steps/sec)
-   - Test minimum delay: Start with 500μs, reduce until motor misses steps
-   - Set stepperMinStepDelayMicroseconds to safe minimum (prevents motor damage)
-   - Set stepperMaxStepDelayMicroseconds for slowest speed (50000μs default - ~20 steps/sec, ~6 RPM)
-   - Lower delay = faster speed (higher step frequency), higher delay = slower speed (lower step frequency)
+4. Calibrate step pulse width timing (symmetric pulse timing):
+   - System uses symmetric pulse timing: HIGH for pulseWidth, LOW for pulseWidth
+   - Total time per step = 2 × pulseWidth
+   - Start with stepperStepPulseWidthMicroseconds = 15000μs (30,000μs per step = ~33 steps/sec, ~10 RPM for 200 steps/rev)
+   - Test minimum pulse width: Start with 10000μs, reduce until motor misses steps
+   - Set stepperMinStepPulseWidthMicroseconds to safe minimum (prevents motor damage)
+   - Set stepperMaxStepPulseWidthMicroseconds for slowest speed (50000μs default = ~10 steps/sec, ~3 RPM)
+   - Lower pulse width = faster speed, higher pulse width = slower speed
 
 ### Speed Range Reference
 
 **Speed Calculation:**
-- Steps per second = 1,000,000 / delay_in_microseconds
+- Total time per step = 2 × pulseWidth (symmetric: HIGH for pulseWidth, LOW for pulseWidth)
+- Steps per second = 1,000,000 / (2 × pulseWidth)
 - RPM = (Steps per second × 60) / (stepsPerRevolution × microstepping × gearRatio)
 
 **Speed Range Table (for 200 steps/rev motor, 1x microstepping, 1:1 gear ratio):**
 
-| Delay (μs) | Steps/sec | RPM | Full Rotation Time | Use Case |
-|------------|-----------|-----|-------------------|----------|
-| 500 (min) | 2,000 | ~600 RPM | 0.1 sec | Very fast (may miss steps) |
-| 1,000 | 1,000 | ~300 RPM | 0.2 sec | Fast |
-| 5,000 | 200 | ~60 RPM | 1.0 sec | Medium |
-| 10,000 | 100 | ~30 RPM | 2.0 sec | Slow (current default) |
-| 20,000 | 50 | ~15 RPM | 4.0 sec | Very slow |
-| 50,000 (max) | 20 | ~6 RPM | 10.0 sec | Extremely slow |
+| Pulse Width (μs) | Time/Step (μs) | Steps/sec | RPM | Full Rotation Time | Use Case |
+|------------------|----------------|-----------|-----|-------------------|----------|
+| 10,000 (min) | 20,000 | 50 | ~15 RPM | 4.0 sec | Fast |
+| 15,000 (default) | 30,000 | ~33 | ~10 RPM | 6.0 sec | Medium (current default) |
+| 25,000 | 50,000 | 20 | ~6 RPM | 10.0 sec | Slow |
+| 50,000 (max) | 100,000 | 10 | ~3 RPM | 20.0 sec | Very slow |
 
-**Typical working range:** 5,000-20,000μs delay (200-50 steps/sec, 60-15 RPM)
+**Typical working range:** 15,000-25,000μs pulse width (~33-20 steps/sec, ~10-6 RPM)
 
 5. Test positioning accuracy:
    - Home system
    - Move to each compartment and verify position
    - Adjust containerPositionsInDegrees[] if needed
-   - Adjust step delays if movement is too fast/slow or motor misses steps
+   - Adjust step pulse width if movement is too fast/slow or motor misses steps
 
 6. Run full rotation timing calibration:
    - Press and hold Button 6 for 3+ seconds to start calibration
@@ -191,7 +190,7 @@ int servoDispensingAngleInDegrees = 90;
 ### Fine-tuning
 - **Auto-homing**: Set `autoHomeAfterDispense = false` to disable auto-home after dispense
 - **Container positions**: Edit `containerPositionsInDegrees[]` array for custom spacing
-- **Servo angle**: Adjust `servoDispensingAngleInDegrees` (0-180°)
+- **Servo range**: Adjust `servoMinMicroseconds` and `servoMaxMicroseconds` for servo limits (servo performs full arc sweep for dispensing)
 - **IR timeout**: Adjust `pillDetectionTimeoutMilliseconds` if pills not detected
 - **Settling time**: Adjust `delayAfterCompartmentMoveMilliseconds` if plate oscillates
 
@@ -213,9 +212,9 @@ RESET          → Reset counters
 | Wrong compartment reached | Calibrate stepper motor settings (steps per revolution, microstepping, gear ratio) or adjust positions in `containerPositionsInDegrees[]` array |
 | Position drifts | Press Button 6 to re-home periodically |
 | Pills not detected | Check D35 IR sensor, increase timeout |
-| Stepper doesn't move | Check wiring D16/D17/D18, verify EN pin (LOW=enabled), adjust step pulse delays |
-| Stepper misses steps | Increase stepperMinStepDelayMicroseconds (motor going too fast - step frequency too high) |
-| Servo doesn't move | Check D4 connection and angle settings |
+| Stepper doesn't move | Check wiring D16/D17/D18, verify EN pin (LOW=enabled), adjust step pulse width |
+| Stepper misses steps | Increase stepperMinStepPulseWidthMicroseconds (motor going too fast - pulse width too low) |
+| Servo doesn't move | Check D4 connection, verify servoMinMicroseconds and servoMaxMicroseconds settings |
 
 ## Operation Flow
 
@@ -243,8 +242,7 @@ System Ready (at home position)
 
 ## Further Documentation
 
-- **BUTTON_REFERENCE.md** - Complete button & pin reference
-- **COMPARTMENT_POSITIONING_GUIDE.md** - Detailed positioning system explanation
+- **Button Reference** - See "Button Reference" section above in this file
 - **POSITIONING_SYSTEM_EXPLAINED.md** - Position calculation logic and examples
 - **ARCHITECTURE.md** - Code structure and module relationships
 

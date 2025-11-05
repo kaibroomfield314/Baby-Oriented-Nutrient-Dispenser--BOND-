@@ -131,6 +131,20 @@ void setup() {
     }
     
     // ========================================================================
+    // Perform servo homing sequence (after stepper homing)
+    // ========================================================================
+    
+    Serial.println("===========================================");
+    Serial.println("Starting servo homing sequence");
+    Serial.println("===========================================");
+    
+    hardwareController->performServoHomingSequence();
+    
+    Serial.println("===========================================");
+    Serial.println("Servo homing sequence complete");
+    Serial.println("===========================================");
+    
+    // ========================================================================
     // System ready
     // ========================================================================
     

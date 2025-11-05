@@ -706,14 +706,23 @@ public:
         int step = (targetMicroseconds >= current) ? systemConfiguration->servoStepMicroseconds : -systemConfiguration->servoStepMicroseconds;
         
         // Move in steps to target position
-        for (int us = current; (step > 0 ? us <= targetMicroseconds : us >= targetMicroseconds); us += step) {
+        int us = current;
+        while ((step > 0 && us < targetMicroseconds) || (step < 0 && us > targetMicroseconds)) {
             dispenserServoMotor.writeMicroseconds(us);
             delay(systemConfiguration->servoStepDelayMilliseconds);
+            
+            // Check if next step would overshoot
+            int nextUs = us + step;
+            if ((step > 0 && nextUs > targetMicroseconds) || (step < 0 && nextUs < targetMicroseconds)) {
+                break;  // Stop before overshooting
+            }
+            us = nextUs;
         }
         
-        Serial.print("Servo moved to: ");
-        Serial.print(targetMicroseconds);
-        Serial.println(" microseconds");
+        // Ensure we end exactly at target position (in case step size didn't divide evenly)
+        dispenserServoMotor.writeMicroseconds(targetMicroseconds);
+        delay(systemConfiguration->servoStepDelayMilliseconds);
+        
     }
     
     /**
@@ -725,6 +734,44 @@ public:
     }
     
     /**
+     * Perform servo homing sequence - move to natural minimum position (150 microseconds)
+     * This is the servo's natural minimum position found during testing
+     * The electromagnet is NOT activated during this sequence
+     */
+    void performServoHomingSequence() {
+        Serial.println("========================================");
+        Serial.println("[Servo Homing] Starting servo homing sequence");
+        Serial.println("========================================");
+        
+        // Ensure electromagnet is OFF (should be off by default, but ensure it)
+        if (isElectromagnetCurrentlyActivated) {
+            Serial.println("[Servo Homing] WARNING: Electromagnet was on, turning off...");
+            deactivateElectromagnetToReleasePill();
+        }
+        
+        // Move servo to natural minimum position (150 microseconds)
+        // This is the servo's natural minimum position found during testing
+        const int naturalMinimumMicroseconds = 150;
+        
+        Serial.print("[Servo Homing] Moving servo to natural minimum position: ");
+        Serial.print(naturalMinimumMicroseconds);
+        Serial.println(" μs");
+        
+        moveServoToMicroseconds(naturalMinimumMicroseconds);
+        delay(systemConfiguration->servoMovementDelayMilliseconds);
+        
+        // Verify position
+        int currentPosition = getCurrentServoPosition();
+        Serial.print("[Servo Homing] Servo homing complete. Current position: ");
+        Serial.print(currentPosition);
+        Serial.println(" μs");
+        
+        Serial.println("========================================");
+        Serial.println("[Servo Homing] Servo homing sequence complete");
+        Serial.println("========================================");
+    }
+    
+    /**
      * Move servo to maximum position (for dispensing)
      */
     void moveServoToMaxPosition() {
@@ -733,12 +780,18 @@ public:
     }
     
     /**
+     * Move servo to maximum position and wait for movement to complete
+     */
+    void moveServoToMaxPositionAndWait() {
+        moveServoToMaxPosition();
+        delay(systemConfiguration->servoMovementDelayMilliseconds);
+    }
+    
+    /**
      * Servo full arc sweep: min → max → min (for pill dispensing)
      * This sweeps the full range to ensure pill release
      */
     void servoFullArcSweep() {
-        Serial.println("[Servo] Starting full arc sweep (min → max → min)");
-        
         int minSafe = getServoMinSafe();
         int maxSafe = getServoMaxSafe();
         
@@ -746,17 +799,13 @@ public:
         moveServoToMicroseconds(minSafe);
         
         // Sweep to maximum
-        Serial.println("[Servo] Sweeping to maximum position...");
         moveServoToMicroseconds(maxSafe);
         
         // Wait at maximum
         delay(500);
         
         // Sweep back to minimum
-        Serial.println("[Servo] Sweeping back to minimum position...");
         moveServoToMicroseconds(minSafe);
-        
-        Serial.println("[Servo] Full arc sweep complete");
     }
     
     /**
@@ -783,6 +832,90 @@ public:
         delay(systemConfiguration->servoMovementDelayMilliseconds);
     }
     
+    /**
+     * Get current servo position in microseconds
+     * @return Current servo position in microseconds
+     */
+    int getCurrentServoPosition() {
+        if (!dispenserServoMotor.attached()) {
+            int minSafe = getServoMinSafe();
+            int maxSafe = getServoMaxSafe();
+            dispenserServoMotor.attach(PIN_FOR_SERVO_MOTOR_SIGNAL, minSafe, maxSafe);
+        }
+        int current = dispenserServoMotor.readMicroseconds();
+        int minSafe = getServoMinSafe();
+        int maxSafe = getServoMaxSafe();
+        
+        // Clamp to safe range if outside
+        if (current < minSafe || current > maxSafe) {
+            return minSafe;
+        }
+        return current;
+    }
+    
+    /**
+     * Move servo from current position to maximum position (full 180 degrees)
+     * Returns the target position reached
+     * This is used for pill dispensing - call moveServoToMicroseconds() separately to return
+     * @return The target position reached in microseconds
+     */
+    int moveServoFromCurrentToMax() {
+        int minSafe = getServoMinSafe();
+        int maxSafe = getServoMaxSafe();
+        
+        // Get current position
+        int startPosition = getCurrentServoPosition();
+        
+        // Move to maximum position (full 180 degrees from minimum)
+        // This ensures maximum travel range for pill dispensing
+        int targetPosition = maxSafe;
+        
+        Serial.print("[Servo] Moving from current position (");
+        Serial.print(startPosition);
+        Serial.print(" μs) to maximum position (");
+        Serial.print(targetPosition);
+        Serial.print(" μs) - Range: ");
+        Serial.print(targetPosition - startPosition);
+        Serial.println(" μs");
+        
+        // Move to target position
+        moveServoToMicroseconds(targetPosition);
+        delay(systemConfiguration->servoMovementDelayMilliseconds);
+        
+        return targetPosition;
+    }
+    
+    /**
+     * Move servo from current position to maximum position (full 180 degrees),
+     * then return to original position
+     * This is used for pill dispensing
+     * @return The original start position (for returning later)
+     */
+    int moveServoFromCurrentToMaxAndReturn() {
+        int startPosition = getCurrentServoPosition();
+        
+        // Move to max position
+        moveServoFromCurrentToMax();
+        
+        // Return to original position
+        Serial.print("[Servo] Returning to original position (");
+        Serial.print(startPosition);
+        Serial.println(" μs)");
+        moveServoToMicroseconds(startPosition);
+        delay(systemConfiguration->servoMovementDelayMilliseconds);
+        
+        return startPosition;
+    }
+    
+    /**
+     * Move servo from current position to maximum position (or 180 degrees worth),
+     * then return to original position, and wait for movement to complete
+     */
+    void moveServoFromCurrentToMaxAndReturnAndWait() {
+        moveServoFromCurrentToMaxAndReturn();
+        delay(systemConfiguration->servoMovementDelayMilliseconds);
+    }
+    
     // ========================================================================
     // Electromagnet Control Methods
     // ========================================================================
@@ -793,7 +926,6 @@ public:
     void activateElectromagnetForPillPickup() {
         digitalWrite(PIN_FOR_ELECTROMAGNET_CONTROL, HIGH);
         isElectromagnetCurrentlyActivated = true;
-        Serial.println("Electromagnet activated");
     }
     
     /**
@@ -802,7 +934,6 @@ public:
     void deactivateElectromagnetToReleasePill() {
         digitalWrite(PIN_FOR_ELECTROMAGNET_CONTROL, LOW);
         isElectromagnetCurrentlyActivated = false;
-        Serial.println("Electromagnet deactivated");
     }
     
     /**
