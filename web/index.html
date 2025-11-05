@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pill Dispenser - Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4A90E2;
+            --primary-dark: #2E5C8A;
+            --secondary: #50C878;
+            --danger: #E74C3C;
+            --warning: #F39C12;
+            --light-bg: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #2C3E50;
+            --text-secondary: #7F8C8D;
+            --border: #E0E6ED;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-brand {
+            padding: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand h2 {
+            color: var(--primary);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand .icon {
+            font-size: 28px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .sidebar-menu a:hover {
+            color: var(--primary);
+            background: var(--light-bg);
+            padding-left: 24px;
+        }
+
+        .sidebar-menu a.active {
+            color: var(--primary);
+            background: var(--light-bg);
+            border-left: 4px solid var(--primary);
+            padding-left: 20px;
+        }
+
+        .sidebar-menu .icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .device-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--light-bg);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .device-status.connected {
+            color: var(--secondary);
+        }
+
+        .device-status.disconnected {
+            color: var(--danger);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .device-status.connected .status-dot {
+            background: var(--secondary);
+        }
+
+        .device-status.disconnected .status-dot {
+            background: var(--danger);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-card .subtext {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--light-bg);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #C0392B;
+        }
+
+        .btn-success {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45B870;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--light-bg);
+            border-bottom: 2px solid var(--border);
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr:hover {
+            background: var(--light-bg);
+        }
+
+        /* List Items */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:hover {
+            background: var(--light-bg);
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .list-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(80, 200, 120, 0.1);
+            color: var(--secondary);
+        }
+
+        .badge-warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-primary {
+            background: rgba(74, 144, 226, 0.1);
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Adherence Chart */
+        .adherence-chart {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .adherence-day {
+            text-align: center;
+        }
+
+        .adherence-day-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .adherence-box {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .adherence-box:hover {
+            transform: scale(1.1);
+        }
+
+        .adherence-box.taken {
+            background: var(--secondary);
+        }
+
+        .adherence-box.missed {
+            background: var(--danger);
+        }
+
+        .adherence-box.pending {
+            background: var(--warning);
+        }
+
+        .adherence-box.empty {
+            background: transparent;
+        }
+
+        /* Schedule Pills Grid */
+        .pills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .pill-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .pill-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .pill-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .pill-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .pill-dose {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .pill-time {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-brand">
+                <h2><span class="icon">💊</span> BOND</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a class="nav-link active" onclick="showSection('dashboard')"><span class="icon">📊</span> Dashboard</a></li>
+                <li><a class="nav-link" onclick="showSection('pills')"><span class="icon">💊</span> Pills</a></li>
+                <li><a class="nav-link" onclick="showSection('schedule')"><span class="icon">📅</span> Schedule</a></li>
+                <li><a class="nav-link" onclick="showSection('appointments')"><span class="icon">🏥</span> Appointments</a></li>
+                <li><a class="nav-link" onclick="showSection('adherence')"><span class="icon">✓</span> Adherence</a></li>
+                <li><a class="nav-link" onclick="showSection('symptoms')"><span class="icon">🤒</span> Symptoms</a></li>
+                <li><a class="nav-link" onclick="showSection('side-effects')"><span class="icon">⚠️</span> Side Effects</a></li>
+                <li><a class="nav-link" onclick="showSection('settings')"><span class="icon">⚙️</span> Settings</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <div id="device-status" class="device-status connected">
+                        <span class="status-dot"></span>
+                        <span>Device Connected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Dashboard Section -->
+                <div class="section active" id="dashboard">
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="label">Total Pills</div>
+                            <div class="value" id="total-pills">0</div>
+                            <div class="subtext">Currently tracking</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">Today's Adherence</div>
+                            <div class="value" id="today-adherence">0%</div>
+                            <div class="subtext">Pills taken today</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">This Week</div>
+                            <div class="value" id="week-adherence">0%</div>
+                            <div class="subtext">Average adherence</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">Upcoming</div>
+                            <div class="value" id="upcoming-pills">0</div>
+                            <div class="subtext">Next 24 hours</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Today's Schedule</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-pill')">+ Add Pill</button>
+                        </div>
+                        <div id="todays-schedule">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📋</div>
+                                <div class="empty-state-text">No pills scheduled for today</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Upcoming Appointments</h3>
+                        </div>
+                        <div id="upcoming-appointments">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🏥</div>
+                                <div class="empty-state-text">No upcoming appointments</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pills Section -->
+                <div class="section" id="pills">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">My Pills</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-pill')">+ Add Pill</button>
+                        </div>
+                        <div id="pills-list"></div>
+                    </div>
+                </div>
+
+                <!-- Schedule Section -->
+                <div class="section" id="schedule">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Weekly Schedule</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-schedule')">+ Add Schedule</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Pill</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                        <th>Saturday</th>
+                                        <th>Sunday</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments Section -->
+                <div class="section" id="appointments">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Appointments</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-appointment')">+ New Appointment</button>
+                        </div>
+                        <div id="appointments-list"></div>
+                    </div>
+                </div>
+
+                <!-- Adherence Section -->
+                <div class="section" id="adherence">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Adherence Tracking</h3>
+                            <select onchange="changeAdherenceMonth(this.value)">
+                                <option value="0">This Month</option>
+                                <option value="-1">Last Month</option>
+                                <option value="-2">2 Months Ago</option>
+                            </select>
+                        </div>
+                        <div id="adherence-calendar"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Statistics</h3>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Pill</th>
+                                        <th>Total Scheduled</th>
+                                        <th>Taken</th>
+                                        <th>Missed</th>
+                                        <th>Adherence %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adherence-stats">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Symptoms Section -->
+                <div class="section" id="symptoms">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Symptoms Log</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-symptom')">+ Log Symptom</button>
+                        </div>
+                        <div id="symptoms-list"></div>
+                    </div>
+                </div>
+
+                <!-- Side Effects Section -->
+                <div class="section" id="side-effects">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Side Effects Log</h3>
+                            <button class="btn btn-primary" onclick="showModal('add-side-effect')">+ Log Side Effect</button>
+                        </div>
+                        <div id="side-effects-list"></div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="section" id="settings">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">User Settings</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="user-name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="user-email" placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" id="user-dob">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="notifications-enabled" checked>
+                                Enable Notifications
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveUserSettings()">Save Settings</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Device</h3>
+                        </div>
+                        <div class="list-item">
+                            <div class="list-item-content">
+                                <div class="list-item-title">Bluetooth Device</div>
+                                <div class="list-item-subtitle" id="device-name">Not connected</div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="toggleDevice()">Toggle</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Data</h3>
+                        </div>
+                        <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add/Edit Pill Modal -->
+    <div class="modal" id="add-pill">
+        <div class="modal-content">
+            <div class="modal-header">Add Pill</div>
+            <div class="form-group">
+                <label>Pill Name</label>
+                <input type="text" id="pill-name" placeholder="e.g., Aspirin">
+            </div>
+            <div class="form-group">
+                <label>Dosage</label>
+                <input type="text" id="pill-dosage" placeholder="e.g., 500mg">
+            </div>
+            <div class="form-group">
+                <label>Frequency</label>
+                <select id="pill-frequency">
+                    <option>Once daily</option>
+                    <option>Twice daily</option>
+                    <option>Three times daily</option>
+                    <option>As needed</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="pill-notes" placeholder="Additional notes..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-pill')">Cancel</button>
+                <button class="btn btn-primary" onclick="addPill()">Add Pill</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Appointment Modal -->
+    <div class="modal" id="add-appointment">
+        <div class="modal-content">
+            <div class="modal-header">New Appointment</div>
+            <div class="form-group">
+                <label>Doctor Name</label>
+                <input type="text" id="appt-doctor" placeholder="e.g., Dr. Smith">
+            </div>
+            <div class="form-group">
+                <label>Specialty</label>
+                <input type="text" id="appt-specialty" placeholder="e.g., Cardiology">
+            </div>
+            <div class="form-group">
+                <label>Date & Time</label>
+                <input type="datetime-local" id="appt-datetime">
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="appt-location" placeholder="Hospital or clinic name">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="appt-notes" placeholder="Appointment notes..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-appointment')">Cancel</button>
+                <button class="btn btn-primary" onclick="addAppointment()">Add Appointment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Symptom Modal -->
+    <div class="modal" id="add-symptom">
+        <div class="modal-content">
+            <div class="modal-header">Log Symptom</div>
+            <div class="form-group">
+                <label>Symptom</label>
+                <select id="symptom-name">
+                    <option>Headache</option>
+                    <option>Fever</option>
+                    <option>Cough</option>
+                    <option>Fatigue</option>
+                    <option>Nausea</option>
+                    <option>Dizziness</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Severity</label>
+                <select id="symptom-severity">
+                    <option value="mild">Mild</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="severe">Severe</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="symptom-notes" placeholder="Describe the symptom..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-symptom')">Cancel</button>
+                <button class="btn btn-primary" onclick="addSymptom()">Log Symptom</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Side Effect Modal -->
+    <div class="modal" id="add-side-effect">
+        <div class="modal-content">
+            <div class="modal-header">Log Side Effect</div>
+            <div class="form-group">
+                <label>Pill</label>
+                <select id="sideeffect-pill"></select>
+            </div>
+            <div class="form-group">
+                <label>Side Effect</label>
+                <select id="sideeffect-name">
+                    <option>Drowsiness</option>
+                    <option>Dizziness</option>
+                    <option>Nausea</option>
+                    <option>Headache</option>
+                    <option>Rash</option>
+                    <option>Stomach upset</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Severity</label>
+                <select id="sideeffect-severity">
+                    <option value="mild">Mild</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="severe">Severe</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="sideeffect-notes" placeholder="Describe the side effect..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-side-effect')">Cancel</button>
+                <button class="btn btn-primary" onclick="addSideEffect()">Log Side Effect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Schedule Modal -->
+    <div class="modal" id="add-schedule">
+        <div class="modal-content">
+            <div class="modal-header">Add Schedule</div>
+            <div class="form-group">
+                <label>Pill</label>
+                <select id="schedule-pill"></select>
+            </div>
+            <div class="form-group">
+                <label>Time</label>
+                <input type="time" id="schedule-time">
+            </div>
+            <div class="form-group">
+                <label>Days</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <label><input type="checkbox" class="schedule-day" value="0"> Monday</label>
+                    <label><input type="checkbox" class="schedule-day" value="1"> Tuesday</label>
+                    <label><input type="checkbox" class="schedule-day" value="2"> Wednesday</label>
+                    <label><input type="checkbox" class="schedule-day" value="3"> Thursday</label>
+                    <label><input type="checkbox" class="schedule-day" value="4"> Friday</label>
+                    <label><input type="checkbox" class="schedule-day" value="5"> Saturday</label>
+                    <label><input type="checkbox" class="schedule-day" value="6"> Sunday</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-schedule')">Cancel</button>
+                <button class="btn btn-primary" onclick="addSchedule()">Add Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Management
+        const appData = {
+            user: {
+                name: 'John Doe',
+                email: 'john@example.com',
+                dob: ''
+            },
+            pills: [],
+            schedules: [],
+            appointments: [],
+            symptoms: [],
+            sideEffects: [],
+            adherence: {},
+            deviceConnected: true
+        };
+
+        // Initialize
+        function init() {
+            loadData();
+            updateAllSections();
+            initializeForm();
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('appData');
+            if (saved) {
+                Object.assign(appData, JSON.parse(saved));
+            } else {
+                // Sample data
+                addSampleData();
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('appData', JSON.stringify(appData));
+        }
+
+        // Add sample data
+        function addSampleData() {
+            appData.pills = [
+                { id: 1, name: 'Aspirin', dosage: '500mg', frequency: 'Once daily', notes: 'For headache' },
+                { id: 2, name: 'Vitamin D', dosage: '1000IU', frequency: 'Once daily', notes: 'Supplement' }
+            ];
+            appData.schedules = [
+                { id: 1, pillId: 1, time: '09:00', days: [0, 1, 2, 3, 4, 5, 6] },
+                { id: 2, pillId: 2, time: '08:00', days: [0, 1, 2, 3, 4, 5, 6] }
+            ];
+            saveData();
+        }
+
+        // Initialize form dropdowns
+        function initializeForm() {
+            const pillSelects = ['sideeffect-pill', 'schedule-pill'];
+            pillSelects.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '';
+                appData.pills.forEach(pill => {
+                    const option = document.createElement('option');
+                    option.value = pill.id;
+                    option.textContent = pill.name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Section Navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+
+            // Update title
+            const titles = {
+                dashboard: 'Dashboard',
+                pills: 'My Pills',
+                schedule: 'Weekly Schedule',
+                appointments: 'Appointments',
+                adherence: 'Adherence Tracking',
+                symptoms: 'Symptoms',
+                'side-effects': 'Side Effects',
+                settings: 'Settings'
+            };
+            document.getElementById('page-title').textContent = titles[sectionId] || 'Dashboard';
+
+            // Update content
+            if (sectionId === 'dashboard') updateDashboard();
+            else if (sectionId === 'pills') updatePillsList();
+            else if (sectionId === 'schedule') updateScheduleTable();
+            else if (sectionId === 'appointments') updateAppointmentsList();
+            else if (sectionId === 'adherence') updateAdherence();
+            else if (sectionId === 'symptoms') updateSymptomsList();
+            else if (sectionId === 'side-effects') updateSideEffectsList();
+        }
+
+        // Dashboard
+        function updateDashboard() {
+            document.getElementById('total-pills').textContent = appData.pills.length;
+
+            const today = new Date().toDateString();
+            const todayAdherence = appData.adherence[today] || { taken: 0, total: 0 };
+            document.getElementById('today-adherence').textContent =
+                todayAdherence.total > 0 ? Math.round((todayAdherence.taken / todayAdherence.total) * 100) + '%' : '0%';
+
+            // Calculate week adherence
+            let weekTaken = 0, weekTotal = 0;
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toDateString();
+                if (appData.adherence[key]) {
+                    weekTaken += appData.adherence[key].taken;
+                    weekTotal += appData.adherence[key].total;
+                }
+            }
+            document.getElementById('week-adherence').textContent =
+                weekTotal > 0 ? Math.round((weekTaken / weekTotal) * 100) + '%' : '0%';
+
+            // Count upcoming pills (next 24 hours)
+            let upcoming = 0;
+            appData.schedules.forEach(schedule => {
+                const now = new Date();
+                const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                // Simplified count
+                upcoming += 1;
+            });
+            document.getElementById('upcoming-pills').textContent = upcoming;
+
+            updateTodaysSchedule();
+            updateUpcomingAppointments();
+        }
+
+        function updateTodaysSchedule() {
+            const container = document.getElementById('todays-schedule');
+            const dayOfWeek = new Date().getDay();
+            const todaySchedules = appData.schedules.filter(s => s.days.includes(dayOfWeek));
+
+            if (todaySchedules.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">No pills scheduled for today</div></div>';
+                return;
+            }
+
+            container.innerHTML = todaySchedules.map(schedule => {
+                const pill = appData.pills.find(p => p.id === schedule.pillId);
+                return `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${pill?.name || 'Unknown'}</div>
+                            <div class="list-item-subtitle">${schedule.time}</div>
+                        </div>
+                        <button class="btn btn-success btn-icon" onclick="markAsTaken(${schedule.pillId})">✓ Taken</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateUpcomingAppointments() {
+            const container = document.getElementById('upcoming-appointments');
+            const upcoming = appData.appointments.filter(a => new Date(a.datetime) > new Date());
+
+            if (upcoming.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏥</div><div class="empty-state-text">No upcoming appointments</div></div>';
+                return;
+            }
+
+            container.innerHTML = upcoming.slice(0, 3).map(appt => {
+                const date = new Date(appt.datetime);
+                return `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${appt.doctor} - ${appt.specialty}</div>
+                            <div class="list-item-subtitle">${date.toLocaleDateString()} at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Pills Management
+        function updatePillsList() {
+            const container = document.getElementById('pills-list');
+            if (appData.pills.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💊</div><div class="empty-state-text">No pills added yet</div></div>';
+                return;
+            }
+
+            container.innerHTML = appData.pills.map(pill => `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">${pill.name}</div>
+                        <div class="list-item-subtitle">${pill.dosage} • ${pill.frequency}</div>
+                    </div>
+                    <div class="list-item-actions">
+                        <button class="btn btn-secondary btn-icon" onclick="editPill(${pill.id})">Edit</button>
+                        <button class="btn btn-danger btn-icon" onclick="deletePill(${pill.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addPill() {
+            const pill = {
+                id: Date.now(),
+                name: document.getElementById('pill-name').value,
+                dosage: document.getElementById('pill-dosage').value,
+                frequency: document.getElementById('pill-frequency').value,
+                notes: document.getElementById('pill-notes').value
+            };
+
+            if (!pill.name || !pill.dosage) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            appData.pills.push(pill);
+            saveData();
+            initializeForm();
+            closeModal('add-pill');
+            updatePillsList();
+
+            // Clear form
+            document.getElementById('pill-name').value = '';
+            document.getElementById('pill-dosage').value = '';
+            document.getElementById('pill-notes').value = '';
+        }
+
+        function deletePill(id) {
+            if (confirm('Delete this pill?')) {
+                appData.pills = appData.pills.filter(p => p.id !== id);
+                appData.schedules = appData.schedules.filter(s => s.pillId !== id);
+                saveData();
+                initializeForm();
+                updatePillsList();
+            }
+        }
+
+        // Schedule Management
+        function updateScheduleTable() {
+            const tbody = document.getElementById('schedule-table-body');
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            tbody.innerHTML = appData.pills.map(pill => {
+                const schedules = appData.schedules.filter(s => s.pillId === pill.id);
+                return `
+                    <tr>
+                        <td><strong>${pill.name}</strong></td>
+                        ${dayNames.map((_, dayIndex) => {
+                            const schedule = schedules.find(s => s.days.includes(dayIndex));
+                            return `<td>${schedule ? schedule.time : '-'}</td>`;
+                        }).join('')}
+                        <td>
+                            <button class="btn btn-secondary btn-icon" onclick="editSchedule(${pill.id})">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function addSchedule() {
+            const pillId = parseInt(document.getElementById('schedule-pill').value);
+            const time = document.getElementById('schedule-time').value;
+            const days = Array.from(document.querySelectorAll('.schedule-day:checked')).map(c => parseInt(c.value));
+
+            if (!time || days.length === 0) {
+                alert('Please select time and at least one day');
+                return;
+            }
+
+            // Remove existing schedule for this pill
+            appData.schedules = appData.schedules.filter(s => s.pillId !== pillId);
+
+            // Add new schedule
+            appData.schedules.push({
+                id: Date.now(),
+                pillId,
+                time,
+                days
+            });
+
+            saveData();
+            closeModal('add-schedule');
+            updateScheduleTable();
+        }
+
+        // Appointments
+        function updateAppointmentsList() {
+            const container = document.getElementById('appointments-list');
+            if (appData.appointments.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏥</div><div class="empty-state-text">No appointments scheduled</div></div>';
+                return;
+            }
+
+            container.innerHTML = appData.appointments.map(appt => {
+                const date = new Date(appt.datetime);
+                return `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${appt.doctor} - ${appt.specialty}</div>
+                            <div class="list-item-subtitle">${date.toLocaleDateString()} at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | ${appt.location}</div>
+                        </div>
+                        <button class="btn btn-danger btn-icon" onclick="deleteAppointment(${appt.id})">Delete</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addAppointment() {
+            const appt = {
+                id: Date.now(),
+                doctor: document.getElementById('appt-doctor').value,
+                specialty: document.getElementById('appt-specialty').value,
+                datetime: document.getElementById('appt-datetime').value,
+                location: document.getElementById('appt-location').value,
+                notes: document.getElementById('appt-notes').value
+            };
+
+            if (!appt.doctor || !appt.datetime) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            appData.appointments.push(appt);
+            saveData();
+            closeModal('add-appointment');
+            updateAppointmentsList();
+
+            // Clear form
+            document.getElementById('appt-doctor').value = '';
+            document.getElementById('appt-specialty').value = '';
+            document.getElementById('appt-datetime').value = '';
+            document.getElementById('appt-location').value = '';
+            document.getElementById('appt-notes').value = '';
+        }
+
+        function deleteAppointment(id) {
+            appData.appointments = appData.appointments.filter(a => a.id !== id);
+            saveData();
+            updateAppointmentsList();
+        }
+
+        // Adherence
+        function updateAdherence() {
+            updateAdherenceCalendar();
+            updateAdherenceStats();
+        }
+
+        function updateAdherenceCalendar() {
+            const container = document.getElementById('adherence-calendar');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+
+            let html = '<div class="adherence-chart">';
+            for (let i = 1; i <= daysInMonth; i++) {
+                const date = new Date(year, month, i);
+                const dateStr = date.toDateString();
+                const adherence = appData.adherence[dateStr];
+                const status = !adherence ? 'empty' : adherence.taken === adherence.total ? 'taken' : adherence.taken === 0 ? 'missed' : 'pending';
+
+                html += `
+                    <div class="adherence-day">
+                        <div class="adherence-day-label">${date.getDate()}</div>
+                        <div class="adherence-box ${status}" title="${dateStr}"></div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function updateAdherenceStats() {
+            const tbody = document.getElementById('adherence-stats');
+            tbody.innerHTML = appData.pills.map(pill => {
+                let total = 0, taken = 0;
+                Object.values(appData.adherence).forEach(day => {
+                    if (day.pillIds && day.pillIds.includes(pill.id)) {
+                        total++;
+                        if (day.taken > 0) taken++;
+                    }
+                });
+
+                const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
+                return `
+                    <tr>
+                        <td>${pill.name}</td>
+                        <td>${total}</td>
+                        <td>${taken}</td>
+                        <td>${total - taken}</td>
+                        <td>
+                            <span class="badge ${percentage >= 80 ? 'badge-success' : percentage >= 60 ? 'badge-warning' : 'badge-danger'}">
+                                ${percentage}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function markAsTaken(pillId) {
+            const today = new Date().toDateString();
+            if (!appData.adherence[today]) {
+                appData.adherence[today] = { taken: 0, total: 0, pillIds: [] };
+            }
+            appData.adherence[today].taken++;
+            appData.adherence[today].total++;
+            if (!appData.adherence[today].pillIds) appData.adherence[today].pillIds = [];
+            if (!appData.adherence[today].pillIds.includes(pillId)) {
+                appData.adherence[today].pillIds.push(pillId);
+            }
+            saveData();
+            updateDashboard();
+            alert('Pill marked as taken!');
+        }
+
+        // Symptoms
+        function updateSymptomsList() {
+            const container = document.getElementById('symptoms-list');
+            if (appData.symptoms.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🤒</div><div class="empty-state-text">No symptoms logged</div></div>';
+                return;
+            }
+
+            container.innerHTML = appData.symptoms.map(symptom => {
+                const date = new Date(symptom.date);
+                return `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${symptom.name}</div>
+                            <div class="list-item-subtitle">${date.toLocaleDateString()} • Severity: ${symptom.severity}</div>
+                        </div>
+                        <button class="btn btn-danger btn-icon" onclick="deleteSymptom(${symptom.id})">Delete</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addSymptom() {
+            const symptom = {
+                id: Date.now(),
+                name: document.getElementById('symptom-name').value,
+                severity: document.getElementById('symptom-severity').value,
+                notes: document.getElementById('symptom-notes').value,
+                date: new Date().toISOString()
+            };
+
+            appData.symptoms.push(symptom);
+            saveData();
+            closeModal('add-symptom');
+            updateSymptomsList();
+
+            // Clear form
+            document.getElementById('symptom-notes').value = '';
+        }
+
+        function deleteSymptom(id) {
+            appData.symptoms = appData.symptoms.filter(s => s.id !== id);
+            saveData();
+            updateSymptomsList();
+        }
+
+        // Side Effects
+        function updateSideEffectsList() {
+            const container = document.getElementById('side-effects-list');
+            if (appData.sideEffects.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">No side effects logged</div></div>';
+                return;
+            }
+
+            container.innerHTML = appData.sideEffects.map(effect => {
+                const date = new Date(effect.date);
+                const pill = appData.pills.find(p => p.id === effect.pillId);
+                return `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${effect.name} (${pill?.name || 'Unknown'})</div>
+                            <div class="list-item-subtitle">${date.toLocaleDateString()} • Severity: ${effect.severity}</div>
+                        </div>
+                        <button class="btn btn-danger btn-icon" onclick="deleteSideEffect(${effect.id})">Delete</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addSideEffect() {
+            const effect = {
+                id: Date.now(),
+                pillId: parseInt(document.getElementById('sideeffect-pill').value),
+                name: document.getElementById('sideeffect-name').value,
+                severity: document.getElementById('sideeffect-severity').value,
+                notes: document.getElementById('sideeffect-notes').value,
+                date: new Date().toISOString()
+            };
+
+            appData.sideEffects.push(effect);
+            saveData();
+            closeModal('add-side-effect');
+            updateSideEffectsList();
+
+            // Clear form
+            document.getElementById('sideeffect-notes').value = '';
+        }
+
+        function deleteSideEffect(id) {
+            appData.sideEffects = appData.sideEffects.filter(e => e.id !== id);
+            saveData();
+            updateSideEffectsList();
+        }
+
+        // User Settings
+        function saveUserSettings() {
+            appData.user.name = document.getElementById('user-name').value;
+            appData.user.email = document.getElementById('user-email').value;
+            appData.user.dob = document.getElementById('user-dob').value;
+            saveData();
+            alert('Settings saved!');
+        }
+
+        function toggleDevice() {
+            appData.deviceConnected = !appData.deviceConnected;
+            const status = document.getElementById('device-status');
+            if (appData.deviceConnected) {
+                status.classList.remove('disconnected');
+                status.classList.add('connected');
+                status.innerHTML = '<span class="status-dot"></span><span>Device Connected</span>';
+                document.getElementById('device-name').textContent = 'BOND Dispenser v1.0';
+            } else {
+                status.classList.remove('connected');
+                status.classList.add('disconnected');
+                status.innerHTML = '<span class="status-dot"></span><span>Device Disconnected</span>';
+                document.getElementById('device-name').textContent = 'Not connected';
+            }
+            saveData();
+        }
+
+        function clearAllData() {
+            if (confirm('This will delete all data. Are you sure?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Modal Management
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        });
+
+        // Update all sections
+        function updateAllSections() {
+            updateDashboard();
+            updatePillsList();
+            updateScheduleTable();
+            updateAppointmentsList();
+            updateAdherence();
+            updateSymptomsList();
+            updateSideEffectsList();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
