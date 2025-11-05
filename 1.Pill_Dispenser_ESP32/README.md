@@ -21,10 +21,9 @@
 ├── DispenserController.h         ← Homing & positioning
 ├── BLEManager.h                  ← Bluetooth
 ├── UIManager.h                   ← LCD & buttons
-└── Documentation/
-    ├── README.md                             (this file)
-    ├── POSITIONING_SYSTEM_EXPLAINED.md       Math & calculations
-    └── ARCHITECTURE.md                       Code structure
+├── README.md                     ← This file (system documentation)
+├── POSITIONING_SYSTEM_EXPLAINED.md ← Math & calculations
+└── ARCHITECTURE.md               ← Code structure
 ```
 
 # Button Reference
@@ -37,9 +36,9 @@
 | 1 | D13 | Select Compartment 1 |
 | 2 | D14 | Select Compartment 2 |
 | 3 | D27 | Select Compartment 3 |
-| 4 | VP | Select Compartment 4 |
+| 4 | VP(D36) | Select Compartment 4 |
 | 5 | D33 | Select Compartment 5 |
-| **6** | **D25** | **Trigger Homing (1s debounce)** |
+| **6** | **D25** | **Trigger Homing (1s debounce)** / **Calibration (hold 3+ sec)** |
 | **7** | **D26** | **Dispense Pill** |
 
 ## Usage
@@ -56,11 +55,12 @@
 ```
 D12     = Home switch (pressure, LOW when pressed)
 D35     = IR pill detector
-D36/D34 = Encoder channels
+VN(39)  = Encoder channel 1
+D34     = Encoder channel 2
 D13     = Button 1 (Compartment 1)
 D14     = Button 2 (Compartment 2)
 D27     = Button 3 (Compartment 3)
-VP      = Button 4 (Compartment 4)
+VP(D36) = Button 4 (Compartment 4)
 D33     = Button 5 (Compartment 5)
 D25     = Button 6 (Homing trigger)
 D26     = Button 7 (Dispense)
@@ -121,12 +121,13 @@ int stepperMaxStepPulseWidthMicroseconds = 50000;    // Maximum pulse width (slo
 // ARRAY-BASED: Customize any container position
 float containerPositionsInDegrees[5] = {
     0.0,      // Container 1: at home (0°)
-    72.0,     // Container 2: 72° from home
+    65.0,     // Container 2: 65° from home
     144.0,    // Container 3: 144° from home
     216.0,    // Container 4: 216° from home
     288.0     // Container 5: 288° from home
 };
-// Example custom spacing: {0.0, 75.0, 150.0, 220.0, 290.0}
+// Note: Current spacing is {0.0, 65.0, 144.0, 216.0, 288.0}
+// Example custom spacing: {0.0, 72.0, 144.0, 216.0, 288.0} for even 72° spacing
 
 // Auto-homing after dispense
 bool autoHomeAfterDispense = true;  // Automatically home after successful pill dispense

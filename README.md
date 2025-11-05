@@ -81,20 +81,31 @@ Baby-Oriented-Nutrient-Dispenser--BOND/
 │       │   └── Symptom.swift
 │       ├── Views/                   # SwiftUI views
 │       │   ├── Root/ContentView.swift
-│       │   ├── Dispense/
+│       │   ├── Dispense/DispenseView.swift
 │       │   ├── Pills/
+│       │   │   ├── PillLibraryView.swift
+│       │   │   ├── AddPillView.swift
+│       │   │   └── EditPillView.swift
 │       │   ├── Schedule/
-│       │   ├── Adherence/
-│       │   ├── Appointments/
-│       │   ├── SideEffects/
-│       │   ├── Symptoms/
-│       │   ├── Connection/
-│       │   └── Settings/
+│       │   │   ├── ScheduleView.swift
+│       │   │   ├── AddScheduleView.swift
+│       │   │   ├── EditScheduleView.swift
+│       │   │   └── ScheduleRow.swift
+│       │   ├── Adherence/AdherenceView.swift
+│       │   ├── Appointments/AppointmentsView.swift
+│       │   ├── SideEffects/SideEffectsView.swift
+│       │   ├── Symptoms/SymptomsView.swift
+│       │   ├── Connection/ConnectionView.swift
+│       │   └── Settings/SettingsView.swift
 │       ├── Utilities/               # Helper utilities
 │       │   ├── ColorHelper.swift
 │       │   ├── Logger.swift
 │       │   └── Theme.swift
-│       └── Assets.xcassets/         # App icons and assets
+│       ├── Assets.xcassets/         # App icons and assets
+│       └── Info.plist               # App configuration and permissions
+│   ├── BOND-APP-IOS.xcodeproj/      # Xcode project file
+│   ├── BOND-APP-IOSTests/           # Unit tests
+│   └── BOND-APP-IOSUITests/         # UI tests
 │
 ├── Test Code/                       # Hardware component test sketches
 │   ├── LED_test/                    # LED functionality test
@@ -111,8 +122,6 @@ Baby-Oriented-Nutrient-Dispenser--BOND/
 │   └── Test_Code_ESP32_updated_with_Stepper_motor/
 │       ├── Stepper_motor_and_servo/
 │       └── Stepper_motor_single_rotation/
-│
-├── Pill Dispenser UI/              # UI design files (currently empty)
 │
 ├── web/                            # Web-based desktop application
 │   └── index.html                  # Single-page web app (HTML/CSS/JavaScript)
